@@ -1,0 +1,3 @@
+# Chỉ cấu hình ruff ở mức tối thiểu; các tuỳ chọn khác dùng mặc định của ruff.
+[tool.ruff]
+target-version = "py311"

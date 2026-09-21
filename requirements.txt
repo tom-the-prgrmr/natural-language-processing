@@ -1,0 +1,5 @@
+# Cài vào venv của dự án: python -m venv .venv && .venv\Scripts\python -m pip install -r requirements.txt
+pymupdf==1.28.2
+pypdf==6.19.0
+openai==3.16.2
+python-dotenv==1.2.3
