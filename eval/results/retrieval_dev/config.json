@@ -1,0 +1,5 @@
+{
+  "split": "dev",
+  "k": 15,
+  "model": "text-embedding-3-small"
+}

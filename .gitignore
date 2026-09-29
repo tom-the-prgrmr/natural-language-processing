@@ -7,3 +7,4 @@ __pycache__/
 CLAUDE.local.md
 .claude/settings.local.json
 data/processed/ocr/**/*.png
+data/processed/embeddings.npz

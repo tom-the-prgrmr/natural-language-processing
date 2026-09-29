@@ -1,6 +1,6 @@
 # Đề bài: Mini project cuối module NLP
 
-Trích nguyên văn từ bài tập Google Classroom (AI Engineer K08), hạn nộp 2026-10-01. Tiêu chí chấm: 5 tiêu chí, 100 điểm (trang gốc không liệt kê chi tiết trọng số).
+Trích nguyên văn từ bài tập Google Classroom (AI Engineer K08). Tiêu chí chấm: 5 tiêu chí, 100 điểm (trang gốc không liệt kê chi tiết trọng số).
 
 MỤC TIÊU
 Đây là bài tập lớn tổng kết module NLP. Mục tiêu không phải đạt điểm số cao nhất, mà là đi trọn vẹn vòng đời phát triển một sản phẩm NLP thật: từ bài toán, dữ liệu, xây dựng mô hình, đánh giá, phân tích lỗi, cải tiến, đến triển khai. Đây là một yêu cầu khá lớn và đầy đủ, đúng chất một dự án thật. Cứ làm hết khả năng của mình, quan trọng nhất là qua quá trình đó bạn tự nhận ra mình còn thiếu gì và cần học thêm gì, đừng để số lượng yêu cầu làm bạn lo lắng.

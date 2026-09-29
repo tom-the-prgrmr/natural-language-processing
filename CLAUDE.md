@@ -1,6 +1,6 @@
 # Chatbot tra cứu mức phạt giao thông (RAG) — Mini project cuối module NLP
 
-Bài nộp AI Engineer K08, hạn **2026-10-01**. Đề bài: `docs/assignment.md`. Ý tưởng, ràng buộc, lịch: `docs/00-idea.md`. Nguồn dữ liệu: `data/raw/SOURCES.md`.
+Bài nộp AI Engineer K08. Đề bài: `docs/assignment.md`. Ý tưởng, ràng buộc: `docs/00-idea.md`. Kế hoạch thực hiện: `docs/plan.md`. Nguồn dữ liệu: `data/raw/SOURCES.md`.
 
 Hệ thống dự kiến (dạng chatbot, hội thoại nhiều lượt): hỏi đáp về xử phạt giao thông đường bộ Việt Nam trên Luật 36/2024/QH15, Nghị định 168/2024/NĐ-CP và Nghị định 238/2026/NĐ-CP (sửa ND168, hiệu lực 15/08/2026; một số điều khoản hiệu lực muộn hơn, xem SOURCES.md). Retrieval theo điều/khoản, LLM chỉ trả lời dựa trên ngữ cảnh truy xuất, có trích dẫn, từ chối khi ngoài phạm vi. Công cụ tham khảo, không phải tư vấn pháp lý.
 

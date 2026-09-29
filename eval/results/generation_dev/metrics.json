@@ -1,0 +1,50 @@
+{
+  "n": 16,
+  "n_answerable": 13,
+  "n_unanswerable": 3,
+  "model": "gpt-5.4-mini",
+  "embed_model": "text-embedding-3-small",
+  "top_k": 8,
+  "correct_numbers_rate": 0.3846,
+  "citation_ok_rate": 0.3077,
+  "refusal_ok_rate_answerable": 0.6154,
+  "refusal_ok_rate_unanswerable": 1.0,
+  "latency_ms": {
+    "retrieval_p50": 213.4,
+    "generation_p50": 2106.2,
+    "total_p50": 2328.6,
+    "total_max": 3581.3
+  },
+  "by_group": {
+    "muc_phat_truc_tiep": {
+      "n": 5,
+      "ok": 2,
+      "rate": 0.4
+    },
+    "doi_thuong": {
+      "n": 3,
+      "ok": 0,
+      "rate": 0.0
+    },
+    "nhieu_dieu_kien": {
+      "n": 2,
+      "ok": 0,
+      "rate": 0.0
+    },
+    "phu_thuoc_loai_xe": {
+      "n": 2,
+      "ok": 1,
+      "rate": 0.5
+    },
+    "ngoai_pham_vi": {
+      "n": 2,
+      "ok": 2,
+      "rate": 1.0
+    },
+    "bay_loi_thoi": {
+      "n": 2,
+      "ok": 1,
+      "rate": 0.5
+    }
+  }
+}

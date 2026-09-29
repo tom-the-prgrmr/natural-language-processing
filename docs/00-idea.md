@@ -1,6 +1,5 @@
 # Ý tưởng: Chatbot tra cứu mức phạt giao thông (RAG)
 
-Ngày ghi: 2026-09-20. Hạn nộp: 2026-10-01.
 Yêu cầu gốc của đề: `docs/assignment.md`.
 
 ## 1. Bài toán
@@ -23,7 +22,6 @@ Người dùng: người lái xe phổ thông. Đây là công cụ tham khảo,
   - Embedding cỡ bge-m3 (~0,6B) chạy được.
   - LLM tự host chỉ khả thi ở cỡ 1,5–3B lượng tử hoá 4 bit (llama.cpp/Ollama). Cỡ 7B không nằm gọn trong VRAM. Tên model cụ thể cần kiểm tra lại khi chọn.
   - Phương án dự phòng: gọi API (Gemini/Groq/OpenAI) cho phần sinh câu trả lời, giữ embedding chạy local.
-- Hạn nộp 2026-10-01.
 - Văn bản luật thay đổi theo thời gian, nên corpus phải có metadata phiên bản và ngày hiệu lực.
 
 ## 4. Dữ liệu
@@ -72,6 +70,6 @@ Xem `docs/plan.md`.
 - Dữ liệu luật có thể được sửa đổi tiếp → ghi ngày truy cập và phiên bản.
 
 ## 11. Câu hỏi mở
-- ~~LLM local hay API?~~ Đã chọn: dùng API OpenAI cho phần sinh câu trả lời (2026-09-20). Tự host LLM local (điểm cộng) là mục tùy chọn nếu còn thời gian; embedding vẫn chạy local. Model OpenAI cụ thể chưa chốt.
+- ~~LLM local hay API?~~ Đã chọn: dùng API OpenAI cho phần sinh câu trả lời. Tự host LLM local (điểm cộng) là mục tùy chọn nếu còn thời gian; embedding vẫn chạy local. Model OpenAI cụ thể chưa chốt.
 - OCR ND238: đã OCR bằng mô hình thị giác (bản nháp), còn phải đối chiếu tay (xem `data/raw/SOURCES.md`).
 - Có cần bản hợp nhất ND168 + ND238, hay chỉ xử lý theo từng văn bản kèm cảnh báo?

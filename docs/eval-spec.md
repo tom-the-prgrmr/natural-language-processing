@@ -12,7 +12,7 @@ Mỗi dòng của `data/eval/dev.jsonl` / `test.jsonl` là một JSON:
   "gold_chunks": ["168_D7_K4"],
   "gold_answer": "Từ 800.000 đến 1.000.000 đồng; trừ 4 điểm GPLX",
   "answerable": true,
-  "as_of": "2026-09-20",
+  "as_of": "YYYY-MM-DD",
   "source": "manual",
   "verified_by": "tên người tra và ngày"
 }

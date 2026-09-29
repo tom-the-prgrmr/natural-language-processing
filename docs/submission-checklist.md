@@ -1,6 +1,6 @@
 # Checklist nộp bài (đối chiếu đề trong `docs/assignment.md`)
 
-Dùng thủ công trước hạn 2026-10-01.
+Dùng thủ công trước khi nộp bài.
 
 Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu `có / thiếu / chưa đủ`, và ghi đường dẫn. Không đánh dấu "có" theo trí nhớ.
 

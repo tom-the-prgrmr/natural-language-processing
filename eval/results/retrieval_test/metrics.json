@@ -1,0 +1,35 @@
+{
+  "n": 22,
+  "model": "text-embedding-3-small",
+  "recall@1": 0.0909,
+  "recall@3": 0.2273,
+  "recall@5": 0.2273,
+  "mrr": 0.1591,
+  "by_group": {
+    "muc_phat_truc_tiep": {
+      "n": 7,
+      "recall@5": 0.2857,
+      "not_found": 4
+    },
+    "doi_thuong": {
+      "n": 5,
+      "recall@5": 0.2,
+      "not_found": 4
+    },
+    "nhieu_dieu_kien": {
+      "n": 4,
+      "recall@5": 0.25,
+      "not_found": 3
+    },
+    "phu_thuoc_loai_xe": {
+      "n": 4,
+      "recall@5": 0.0,
+      "not_found": 4
+    },
+    "bay_loi_thoi": {
+      "n": 2,
+      "recall@5": 0.5,
+      "not_found": 1
+    }
+  }
+}
