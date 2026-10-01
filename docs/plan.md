@@ -27,7 +27,7 @@ Trạng thái: `[ ]` chưa làm, `[x]` xong.
   - **Hạn chế biết trước:** không cố định seed/temperature cho lời gọi LLM, nên có nhiễu giữa các lần chạy giống hệt cấu hình (thấy rõ ở 2 lần chạy test).
 
 ### Triển khai, tài liệu, review
-- [ ] **7. FastAPI** endpoint `/chat` + **web demo khung chat tối giản** (một trang HTML gọi API, không cầu kỳ) + đo latency p50/p95 thật (không cần p95 chuẩn thống kê, vài chục lượt là đủ).
+- [x] **7. FastAPI** endpoint `/chat` (`src/app.py`) + **web demo khung chat tối giản** (`web/index.html`, một trang HTML/JS gọi `/chat`, giữ lịch sử hội thoại phía client) + đo latency thật qua `eval/run_api_latency.py` trên 16 câu dev: **p50 1706ms, p90 2742ms, max 3105ms** (`eval/results/api_latency/`).
 - [ ] **8. Tài liệu:** README chạy lại từ đầu (tự thử trên máy sạch nếu kịp, không thì ghi rõ "chưa tự kiểm"), báo cáo đủ 7 mục (nêu thẳng phần đã cắt so với dự định ban đầu), sơ đồ Mermaid, slide HTML một file.
 - [ ] **Review nhanh** theo `docs/submission-checklist.md`, ưu tiên: số liệu có truy vết được, không rò rỉ test, mức phạt khớp nguồn.
 
