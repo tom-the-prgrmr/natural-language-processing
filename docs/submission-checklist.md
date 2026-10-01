@@ -5,7 +5,7 @@ Dùng thủ công trước khi nộp bài.
 Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu `có / thiếu / chưa đủ`, và ghi đường dẫn. Không đánh dấu "có" theo trí nhớ.
 
 ## 7 mục chính
-1. Problem statement: vấn đề, người dùng, metric và lý do (`docs/01-requirements.md`, `docs/report.md`).
+1. Problem statement: vấn đề, người dùng, metric và lý do (`docs/00-idea.md`, `docs/report.md`).
 2. Data: nguồn, số lượng, chia dev/test, mất cân bằng nhóm, xử lý dữ liệu và lý do.
 3. Method: mô hình/LLM chọn và lý do, cấu hình thật, thiết kế prompt hoặc tham số.
 4. Evaluation và phân tích lỗi: metric đúng, các ca sai cụ thể, điểm chung lặp lại theo nhóm.
@@ -30,4 +30,27 @@ Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu 
 - Điểm yếu và hướng cải thiện tiếp theo được nói thẳng.
 
 ## Kết quả
-Báo cáo bảng ngắn: mục | trạng thái | đường dẫn | việc còn lại. Sắp xếp việc còn lại theo mức ảnh hưởng đến điểm và thời gian còn tới hạn.
+
+Đã kiểm bằng cách đọc file thật / chạy lệnh thật (`gh repo view`, `git ls-files`, `pytest`, `ruff`), không đánh dấu theo trí nhớ.
+
+| Mục | Trạng thái | Đường dẫn | Việc còn lại |
+|---|---|---|---|
+| 1. Problem statement | có | `docs/00-idea.md`, `docs/report.md` §1 | — |
+| 2. Data | có | `docs/report.md` §2, `data/raw/SOURCES.md`, `docs/legal-data.md` | — |
+| 3. Method | có | `docs/report.md` §3, `src/retrieval.py`, `src/generation.py` | — |
+| 4. Evaluation + phân tích lỗi | có | `docs/report.md` §4, `eval/results/` | — |
+| 5. Cải tiến | có | `docs/report.md` §5, `experiments/001`, `experiments/002` | — |
+| 6. Phần tự nghĩ thêm | có | `docs/report.md` §6 (kiểm tra trích dẫn bịa) | — |
+| 7. Deployment | có | `docs/report.md` §7, `src/app.py`, `web/index.html`, `eval/results/api_latency/` | — |
+| Repo GitHub công khai | có | `gh repo view` → `PUBLIC` | — |
+| README chạy lại được | có (tự kiểm từng lệnh, chưa thử máy sạch hoàn toàn) | `README.md` | tự ghi rõ giới hạn này trong README, không giấu |
+| Sơ đồ kiến trúc | có | `docs/architecture.md` (2 sơ đồ Mermaid) | — |
+| Slide HTML | có | `docs/slides.html` | — |
+| Video 5–10 phút | **chưa** | — | quay, kèm link GitHub khi nộp trên Google Classroom |
+| Không lộ `.env`/khoá API | có | `git ls-files \| grep .env` rỗng, `.gitignore` | — |
+| Cảnh báo "tham khảo, không tư vấn pháp lý" | có | `web/index.html` header, `README.md`, prompt hệ thống | — |
+| Nguồn luật + ngày truy cập + trạng thái đối chiếu OCR | có | `data/raw/SOURCES.md`, `docs/legal-data.md` | — |
+| Test đóng băng không bị rò | có | `test.jsonl` chỉ dùng ở `eval/run_*.py --split test`, không đưa vào prompt | — |
+| Điểm yếu nói thẳng | có | `docs/report.md` mục "Giới hạn đã biết", `README.md` | — |
+
+**Việc còn lại duy nhất trước khi nộp: quay video.**

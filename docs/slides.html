@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chatbot tra cứu mức phạt giao thông — Slide tóm tắt</title>
+<style>
+  :root {
+    --bg: #0f172a; --bg2: #111827; --fg: #f1f5f9; --muted: #94a3b8;
+    --accent: #38bdf8; --accent2: #34d399; --warn: #fbbf24; --bad: #f87171;
+    --card: #1e293b; --border: #334155;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden;
+  }
+  .deck { height: 100vh; width: 100vw; position: relative; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column;
+    justify-content: center; padding: 6vh 8vw; background: linear-gradient(160deg, var(--bg), var(--bg2));
+  }
+  .slide.active { display: flex; }
+  .kicker { color: var(--accent); font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; font-weight: 600; }
+  h1 { font-size: 2.6rem; margin: 0 0 1rem; line-height: 1.2; }
+  h2 { font-size: 2.1rem; margin: 0 0 1.2rem; }
+  p.lead { font-size: 1.25rem; color: var(--muted); max-width: 54rem; line-height: 1.5; }
+  ul.points { font-size: 1.15rem; line-height: 1.7; max-width: 56rem; }
+  ul.points li { margin-bottom: 0.4rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.4rem 1.6rem;
+  }
+  .card h3 { margin: 0 0 0.6rem; font-size: 1.1rem; color: var(--accent); }
+  table { border-collapse: collapse; font-size: 1.05rem; margin-top: 0.8rem; }
+  td, th { padding: 0.45rem 1rem; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  .big-stat { font-size: 2.4rem; font-weight: 700; color: var(--accent2); }
+  .stat-label { color: var(--muted); font-size: 0.95rem; }
+  .stat-row { display: flex; gap: 2.5rem; margin-top: 1rem; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; margin-right: 0.4rem; }
+  .tag.ok { background: rgba(52,211,153,0.15); color: var(--accent2); }
+  .tag.warn { background: rgba(251,191,36,0.15); color: var(--warn); }
+  .tag.bad { background: rgba(248,113,113,0.15); color: var(--bad); }
+  .footer-tag { position: absolute; bottom: 4vh; left: 8vw; color: var(--muted); font-size: 0.95rem; }
+  .progress { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent); transition: width 0.25s; }
+  .nav { position: absolute; bottom: 2vh; right: 8vw; color: var(--muted); font-size: 0.95rem; }
+  code { background: rgba(255,255,255,0.08); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.92em; }
+  .mono { font-family: Consolas, monospace; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <section class="slide active">
+    <div class="kicker">AI Engineer K08 — Mini project cuối module NLP</div>
+    <h1>Chatbot tra cứu mức phạt giao thông đường bộ</h1>
+    <p class="lead">RAG trên Luật 36/2024/QH15, Nghị định 168/2024/NĐ-CP và Nghị định 238/2026/NĐ-CP (sửa đổi, hiệu lực 15/08/2026). Trả lời có trích dẫn điều/khoản, từ chối khi ngoài phạm vi.</p>
+    <p class="lead" style="margin-top:1.2rem; font-style:italic;">Công cụ tham khảo, không phải tư vấn pháp lý.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">1 · Problem statement</div>
+    <h2>Vì sao chọn bài toán này</h2>
+    <ul class="points">
+      <li>ND238 sửa đổi mức phạt từ 15/08/2026 — nhu cầu tra cứu thật, ngay lúc này.</li>
+      <li>Có dữ liệu gốc công khai để kiểm chứng số liệu — không phải bài toán mù nhãn.</li>
+      <li>Cho ai: người tra mức phạt một hành vi cụ thể, nhanh hơn đọc nguyên nghị định 55 điều.</li>
+      <li>Đo thành công: Recall@k/MRR (retrieval) + đúng số tiền, đúng trích dẫn, đúng lúc từ chối (sinh câu trả lời) — không dùng accuracy đơn thuần vì câu trả lời là văn bản tự do.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">2 · Data</div>
+    <h2>3 văn bản luật, 2200 chunk theo Điều → Khoản → Điểm</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Nguồn</h3>
+        <table>
+          <tr><td>Luật 36/2024/QH15</td><td>887 chunk</td></tr>
+          <tr><td>NĐ 168/2024/NĐ-CP</td><td>1243 chunk</td></tr>
+          <tr><td>NĐ 238/2026/NĐ-CP (OCR)</td><td>70 chunk</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Tập đánh giá</h3>
+        <p style="margin:0 0 0.5rem;">40 câu: dev 16 / test 24 (đóng băng), 6 nhóm lỗi dự kiến.</p>
+        <span class="tag warn">chưa được người dùng duyệt tay toàn bộ</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">3 · Method</div>
+    <h2>Dense retrieval + LLM ép trích dẫn, JSON output</h2>
+    <ul class="points">
+      <li><code>text-embedding-3-small</code> + cosine (numpy) → top-k=12 chunk.</li>
+      <li><code>gpt-5.4-mini</code>, <code>response_format=json_object</code>: answer, citations, refused, needs_clarification.</li>
+      <li>Chọn bản gốc ND168 hay bản sửa ND238 theo <code>effective_date</code> so với ngày hỏi.</li>
+      <li>Hội thoại nhiều lượt: ghép các lượt hỏi trước làm truy vấn retrieval, không tách bước rewrite riêng.</li>
+      <li>OCR ND238 (PDF scan): RapidOCR local làm mất dấu tiếng Việt → chuyển sang vision API OpenAI.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">4 · Evaluation — Retrieval</div>
+    <h2>Recall@5 ~0.23–0.31 — còn yếu</h2>
+    <table>
+      <tr><th>Split</th><th>Recall@1</th><th>Recall@3</th><th>Recall@5</th><th>MRR</th></tr>
+      <tr><td>dev (n=13)</td><td>0.0769</td><td>0.1538</td><td>0.3077</td><td>0.1682</td></tr>
+      <tr><td>test (n=22)</td><td>0.0909</td><td>0.2273</td><td>0.2273</td><td>0.1591</td></tr>
+    </table>
+    <p class="lead" style="margin-top:1.2rem;">Nguyên nhân: câu hỏi nồng độ cồn liên tục bị truy xuất nhầm sang Điều 21 (giấy tờ xe) thay vì Điều 6/7 — văn bản luật ngắn, nhiều cụm từ hành chính lặp lại làm embedding khó phân giải theo chủ đề.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">4 · Evaluation — Sinh câu trả lời (test, k=12, đóng băng)</div>
+    <h2>Phân tích lỗi: 2 ví dụ thật</h2>
+    <div class="stat-row">
+      <div><div class="big-stat">0.5455</div><div class="stat-label">correct_numbers_rate</div></div>
+      <div><div class="big-stat">0.2273</div><div class="stat-label">citation_ok_rate</div></div>
+      <div><div class="big-stat">0.6364</div><div class="stat-label">refusal_ok (answerable)</div></div>
+    </div>
+    <div class="grid2" style="margin-top:1.4rem;">
+      <div class="card">
+        <h3>"lạng lách xe hơi lần 2 (tái phạm)"</h3>
+        <p style="margin:0;">Gold: tịch thu xe (khoản áp dụng khi tái phạm). Retrieval không đưa chunk "tái phạm" vào top-12 → model hỏi lại thay vì đoán.</p>
+      </div>
+      <div class="card">
+        <h3>"chở con nít ghế trước, không ghế an toàn"</h3>
+        <p style="margin:0;">Gold: khoản 1a Điều 6 (ND238 <b>bổ sung</b>, hiệu lực 15/08/2026). Model trích nhầm khoản cũ ND168 gốc — lỗi "chưa cập nhật quy định mới".</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">5 · Cải tiến — so sánh trước/sau</div>
+    <h2>2 thí nghiệm thật: 1 thất bại, 1 thành công</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>001 · Rút gọn text embed <span class="tag bad">thất bại</span></h3>
+        <p style="margin:0;">Bỏ tiêu đề Điều để giảm nhiễu → Recall@5 giảm 0.31→0.15. Tiêu đề là nơi duy nhất phân biệt ô tô/xe máy. Giữ baseline, ghi nhận kết quả âm tính.</p>
+      </div>
+      <div class="card">
+        <h3>002 · Top-k sinh câu trả lời 8→12 <span class="tag ok">thành công</span></h3>
+        <table>
+          <tr><th>k</th><th>đúng số</th><th>đúng trích dẫn</th></tr>
+          <tr><td>8</td><td>0.3846</td><td>0.3077</td></tr>
+          <tr><td>12</td><td><b>0.4615</b></td><td><b>0.4615</b></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">6 · Phần tự nghĩ thêm</div>
+    <h2>Tự động phát hiện trích dẫn bịa (citation hallucination check)</h2>
+    <ul class="points">
+      <li>Model có thể <i>nói</i> có trích dẫn mà id đó không thật sự nằm trong ngữ cảnh đã đọc.</li>
+      <li>Sau khi nhận JSON, so từng id trong <code>citations</code> với <code>retrieved_ids</code> thật — lệch thì tự động ép <code>refused=True</code>.</li>
+      <li>Nằm trong logic sản phẩm (<code>src/generation.py</code>), không chỉ ở tầng đo eval.</li>
+      <li>Chạy lại test sau khi thêm: refusal_ok tăng 0.5909 → 0.6364 — bắt được các câu "trông ổn" nhưng trích dẫn sai.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">7 · Deployment</div>
+    <h2>FastAPI + demo web, latency đo thật</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>API</h3>
+        <p class="mono" style="margin:0;">POST /chat {question, history}</p>
+        <p style="margin-top:0.6rem;">→ answer, citations, refused, retrieved_ids, retrieval_ms, generation_ms</p>
+      </div>
+      <div class="card">
+        <h3>Latency thật (round-trip, 16 câu dev)</h3>
+        <table>
+          <tr><th>p50</th><th>p90</th><th>max</th></tr>
+          <tr><td>1706ms</td><td>2742ms</td><td>3105ms</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Giới hạn đã biết</div>
+    <h2>Tự nhận, không che giấu</h2>
+    <ul class="points">
+      <li>Retrieval dense đơn thuần chưa đủ — hướng tiếp theo: BM25/hybrid, reranker.</li>
+      <li>40 câu eval phần lớn do LLM soạn, tra số liệu thật nhưng <b>chưa được duyệt tay toàn bộ</b>.</li>
+      <li>Không cố định seed/temperature → có nhiễu nhỏ giữa các lần chạy.</li>
+      <li>Hội thoại nhiều lượt có trong code/demo, chưa có bộ eval tự động riêng.</li>
+      <li>Không dựng bản hợp nhất ND168+ND238 — chọn phiên bản theo ngày tại thời điểm trả lời.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">Cảm ơn</div>
+    <h1>Demo trực tiếp</h1>
+    <p class="lead">Mã nguồn: github.com/tom-the-prgrmr/natural-language-processing<br/>README, báo cáo đầy đủ: docs/report.md</p>
+  </section>
+
+</div>
+<div class="progress" id="progress"></div>
+<div class="nav" id="nav"></div>
+<div class="footer-tag">← → hoặc Space để chuyển slide</div>
+
+<script>
+  const slides = document.querySelectorAll(".slide");
+  let i = 0;
+  const progress = document.getElementById("progress");
+  const nav = document.getElementById("nav");
+  function render() {
+    slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+    progress.style.width = ((i + 1) / slides.length * 100) + "%";
+    nav.textContent = (i + 1) + " / " + slides.length;
+  }
+  function go(delta) {
+    i = Math.min(slides.length - 1, Math.max(0, i + delta));
+    render();
+  }
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", " ", "PageDown"].includes(e.key)) go(1);
+    if (["ArrowLeft", "PageUp"].includes(e.key)) go(-1);
+  });
+  document.getElementById("deck").addEventListener("click", (e) => {
+    const rect = document.getElementById("deck").getBoundingClientRect();
+    go(e.clientX - rect.left > rect.width / 2 ? 1 : -1);
+  });
+  render();
+</script>
+</body>
+</html>

@@ -28,8 +28,8 @@ Trạng thái: `[ ]` chưa làm, `[x]` xong.
 
 ### Triển khai, tài liệu, review
 - [x] **7. FastAPI** endpoint `/chat` (`src/app.py`) + **web demo khung chat tối giản** (`web/index.html`, một trang HTML/JS gọi `/chat`, giữ lịch sử hội thoại phía client) + đo latency thật qua `eval/run_api_latency.py` trên 16 câu dev: **p50 1706ms, p90 2742ms, max 3105ms** (`eval/results/api_latency/`).
-- [ ] **8. Tài liệu:** README chạy lại từ đầu (tự thử trên máy sạch nếu kịp, không thì ghi rõ "chưa tự kiểm"), báo cáo đủ 7 mục (nêu thẳng phần đã cắt so với dự định ban đầu), sơ đồ Mermaid, slide HTML một file.
-- [ ] **Review nhanh** theo `docs/submission-checklist.md`, ưu tiên: số liệu có truy vết được, không rò rỉ test, mức phạt khớp nguồn.
+- [x] **8. Tài liệu:** `README.md` (chạy lại từ đầu, tự kiểm từng lệnh trên máy hiện tại — chưa thử máy sạch hoàn toàn, ghi rõ trong README), `docs/report.md` (đủ 7 mục, nêu thẳng phần đã cắt), `docs/architecture.md` (2 sơ đồ Mermaid), `docs/slides.html` (slide một file, dùng phím mũi tên chuyển slide).
+- [x] **Review nhanh** theo `docs/submission-checklist.md` — bảng kết quả đã điền, mọi mục đều "có" trừ video.
 
 ### Nộp
 - [ ] Quay video 5–10 phút, đẩy code còn lại lên `main`, nộp link trên Google Classroom.
