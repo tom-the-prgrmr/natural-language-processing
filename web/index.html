@@ -12,8 +12,10 @@
     display: flex; flex-direction: column; align-items: center; min-height: 100vh;
   }
   header {
-    width: 100%; max-width: 720px; padding: 16px; text-align: center;
+    width: 100%; max-width: 720px; padding: 16px;
   }
+  .header-row { display: flex; align-items: flex-start; gap: 8px; }
+  .header-text { flex: 1; text-align: center; min-width: 0; }
   header h1 { font-size: 1.1rem; margin: 0 0 4px; }
   header p { font-size: 0.8rem; color: #78716c; margin: 0; }
   #chat {
@@ -38,12 +40,22 @@
   }
   button:disabled { opacity: 0.5; cursor: default; }
   .disclaimer { font-size: 0.7rem; color: #a8a29e; text-align: center; padding-bottom: 8px; max-width: 720px; }
+  .clear-btn {
+    flex-shrink: 0; background: none; border: 1px solid #d6d3d1;
+    border-radius: 8px; padding: 4px 10px; font-size: 0.75rem; color: #78716c; cursor: pointer;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>Tra cứu mức phạt giao thông đường bộ (Luật 36/2024, NĐ 168/2024, NĐ 238/2026)</h1>
-  <p>Công cụ tham khảo, không phải tư vấn pháp lý. Trả lời có trích dẫn điều/khoản.</p>
+  <div class="header-row">
+    <div class="header-text">
+      <h1>Tra cứu mức phạt giao thông đường bộ (Luật 36/2024, NĐ 168/2024, NĐ 238/2026)</h1>
+      <p>Công cụ tham khảo, không phải tư vấn pháp lý. Trả lời có trích dẫn điều/khoản.</p>
+    </div>
+    <button type="button" class="clear-btn" id="clearBtn">Cuộc hội thoại mới</button>
+  </div>
 </header>
 <div id="chat"></div>
 <p class="disclaimer" id="status"></p>
@@ -57,9 +69,33 @@ const formEl = document.getElementById("form");
 const inputEl = document.getElementById("question");
 const sendEl = document.getElementById("send");
 const statusEl = document.getElementById("status");
+const clearBtn = document.getElementById("clearBtn");
+
+// Giữ lịch sử qua lần tải lại trang (F5) -- chỉ lưu trên trình duyệt của
+// người dùng, không gửi lên server/Claude. Có thể trống/lỗi (chế độ ẩn danh,
+// site data bị chặn) nên luôn bọc try/catch và demo vẫn chạy đúng nếu không
+// lưu được, chỉ là mất lịch sử sau khi tải lại.
+const STORAGE_KEY = "rag-traffic-chat-demo-v1";
 let history = [];
 
-function addMsg(role, text, meta) {
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persist(log) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ history, log }));
+  } catch {
+    /* bỏ qua: chỉ ảnh hưởng tới việc giữ lịch sử, không ảnh hưởng chat hiện tại */
+  }
+}
+
+function addMsg(role, text, meta, log) {
   const div = document.createElement("div");
   div.className = "msg " + (role === "user" ? "user" : "bot" + (meta && meta.refused ? " refused" : ""));
   div.textContent = text;
@@ -71,13 +107,39 @@ function addMsg(role, text, meta) {
   }
   chatEl.appendChild(div);
   chatEl.scrollTop = chatEl.scrollHeight;
+  if (log) {
+    log.push({ role, text, meta: meta || null });
+    persist(log);
+  }
 }
+
+const savedLog = [];
+const saved = loadSaved();
+if (saved && Array.isArray(saved.history) && Array.isArray(saved.log)) {
+  history = saved.history;
+  for (const m of saved.log) {
+    addMsg(m.role, m.text, m.meta, null);
+    savedLog.push(m);
+  }
+}
+
+clearBtn.addEventListener("click", () => {
+  history = [];
+  savedLog.length = 0;
+  chatEl.innerHTML = "";
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* bỏ qua */
+  }
+  inputEl.focus();
+});
 
 formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
   const question = inputEl.value.trim();
   if (!question) return;
-  addMsg("user", question);
+  addMsg("user", question, null, savedLog);
   inputEl.value = "";
   sendEl.disabled = true;
   statusEl.textContent = "Đang tra cứu...";
@@ -94,12 +156,15 @@ formEl.addEventListener("submit", async (e) => {
     if (cites.length && !data.refused) metaLine += ` · căn cứ: ${cites.join("; ")}`;
     if (data.needs_clarification) metaLine += " · cần hỏi lại";
     if (data.refused) metaLine += " · từ chối trả lời";
-    addMsg("assistant", data.answer || data.clarify_question || "(không có câu trả lời)", {
-      refused: data.refused,
-      line: metaLine,
-    });
+    addMsg(
+      "assistant",
+      data.answer || data.clarify_question || "(không có câu trả lời)",
+      { refused: data.refused, line: metaLine },
+      savedLog
+    );
     history.push({ role: "user", content: question });
     history.push({ role: "assistant", content: data.answer || data.clarify_question || "" });
+    persist(savedLog);
     statusEl.textContent = "";
   } catch (err) {
     statusEl.textContent = "Lỗi: " + err.message;

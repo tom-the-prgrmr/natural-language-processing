@@ -1,0 +1,51 @@
+{
+  "n": 16,
+  "n_answerable": 13,
+  "n_unanswerable": 3,
+  "model": "gpt-5.4-mini",
+  "embed_model": "text-embedding-3-small",
+  "top_k": 12,
+  "correct_numbers_rate": 0.5385,
+  "citation_ok_rate": 0.6154,
+  "refusal_ok_rate_answerable": 0.6154,
+  "refusal_ok_rate_unanswerable": 1.0,
+  "latency_ms": {
+    "retrieval_p50": 203.0,
+    "generation_p50": 1413.6,
+    "total_p50": 1609.4,
+    "total_max": 3209.2
+  },
+  "by_group": {
+    "muc_phat_truc_tiep": {
+      "n": 5,
+      "ok": 3,
+      "rate": 0.6
+    },
+    "doi_thuong": {
+      "n": 3,
+      "ok": 0,
+      "rate": 0.0
+    },
+    "nhieu_dieu_kien": {
+      "n": 2,
+      "ok": 1,
+      "rate": 0.5
+    },
+    "phu_thuoc_loai_xe": {
+      "n": 2,
+      "ok": 1,
+      "rate": 0.5
+    },
+    "ngoai_pham_vi": {
+      "n": 2,
+      "ok": 2,
+      "rate": 1.0
+    },
+    "bay_loi_thoi": {
+      "n": 2,
+      "ok": 1,
+      "rate": 0.5
+    }
+  },
+  "rescore_note": "correct_numbers tính lại bằng matcher bắt thêm số có đơn vị (km/h, tuổi, mét, điểm...), không chỉ số tiền -- xem eval/rescore_generation.py. 0/13 câu đổi kết quả correct_numbers so với generation_dev_v3c_natural_style/metrics.json gốc (correct_numbers_rate cũ: 0.5385)."
+}

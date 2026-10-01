@@ -1,0 +1,7 @@
+{
+  "split": "test",
+  "model": "gpt-5.4-mini",
+  "embed_model": "text-embedding-3-small",
+  "top_k": 12,
+  "retrieval_mode": "hybrid"
+}

@@ -43,7 +43,7 @@ Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu 
 | 6. Phần tự nghĩ thêm | có | `docs/report.md` §6 (kiểm tra trích dẫn bịa) | — |
 | 7. Deployment | có | `docs/report.md` §7, `src/app.py`, `web/index.html`, `eval/results/api_latency/` | — |
 | Repo GitHub công khai | có | `gh repo view` → `PUBLIC` | — |
-| README chạy lại được | có (tự kiểm từng lệnh, chưa thử máy sạch hoàn toàn) | `README.md` | tự ghi rõ giới hạn này trong README, không giấu |
+| README chạy lại được | có — đã chạy lại toàn bộ trên bản sao sạch (chỉ file sẽ commit, venv mới, không cache embedding), mọi lệnh đạt | `README.md` mục "Giới hạn đã biết" | chưa thử trên máy/HĐH khác hẳn (đã ghi rõ trong README) |
 | Sơ đồ kiến trúc | có | `docs/architecture.md` (2 sơ đồ Mermaid) | — |
 | Slide HTML | có | `docs/slides.html` | — |
 | Video 5–10 phút | **chưa** | — | quay, kèm link GitHub khi nộp trên Google Classroom |

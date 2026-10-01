@@ -27,6 +27,10 @@ SPACING_FIXES = [
     (re.compile(r"\b([a-zđ]{1,2}) \)"), r"\1)"),  # "b )" -> "b)"
     (re.compile(r"\s+([,;.])"), r"\1"),  # "điểm b , điểm d" -> "điểm b, điểm d"
     (re.compile(r'"\s+([a-zđ]\))'), r'"\1'),  # dấu ngoặc kép dính điểm
+    # Số tiền bị thẻ nội tuyến cắt đôi: HTML gốc "40.000.<span>000</span>" ->
+    # "40.000. 000". Chỉ ghép khi phía trước đã có một nhóm nghìn để không ghép
+    # nhầm "khoản 3. 100...". Phát hiện qua experiments/006.
+    (re.compile(r"(\d{1,3}\.\d{3})\.\s+(\d{3})(?!\d)"), r"\1.\2"),
 ]
 
 

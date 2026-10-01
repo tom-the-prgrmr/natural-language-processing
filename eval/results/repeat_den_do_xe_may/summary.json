@@ -1,0 +1,11 @@
+{
+  "question": "Xe máy vượt đèn đỏ phạt bao nhiêu?",
+  "n": 15,
+  "retrieval_mode": "hybrid",
+  "counts": {
+    "blocked_hallucinated_id": 6,
+    "answered": 6,
+    "model_refused": 2,
+    "blocked_ungrounded_amount": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "split": "dev",
+  "k": 12,
+  "model": "text-embedding-3-small",
+  "mode": "hybrid",
+  "expand": true
+}

@@ -60,3 +60,17 @@ def test_khoan_zero_is_rare():
         law_chunks = [c for c in chunks if c["law"] == law]
         k0 = sum(1 for c in law_chunks if c["khoan"] == "0")
         assert k0 / len(law_chunks) < 0.2, (law, k0, len(law_chunks))
+
+
+def test_no_amount_split_by_inline_html_tag():
+    """HTML gốc ND168 khoản 11 Điều 6 viết "40.000.<span>000</span>"; bản cũ của
+    clean.py thay thẻ bằng dấu cách nên ra "40.000. 000" (xem experiments/006)."""
+    import re
+
+    chunks = load_chunks()
+    broken = [
+        c["id"] for c in chunks if re.search(r"\d\.\d{3}\.\s+\d{3}(?!\d)", c["text"])
+    ]
+    assert broken == []
+    c = {c["id"]: c for c in chunks}["168_D6_K11_a"]
+    assert "30.000.000 đồng đến 40.000.000 đồng" in c["text"]

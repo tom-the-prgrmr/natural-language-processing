@@ -37,12 +37,20 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="dev", choices=["dev", "test"])
     ap.add_argument("--k", type=int, default=max(K_VALUES), help="top-k tối đa lấy về")
+    ap.add_argument("--mode", default="hybrid", choices=["dense", "hybrid"])
+    ap.add_argument(
+        "--no-expand",
+        dest="expand",
+        action="store_false",
+        help="tắt mở rộng truy vấn văn nói -> thuật ngữ luật (baseline trước 007)",
+    )
+    ap.add_argument("--tag", default="", help="hậu tố thư mục kết quả, vd _hybrid")
     args = ap.parse_args()
 
     items = [i for i in load_eval(args.split) if i["answerable"]]
     print(f"{args.split}: {len(items)} câu answerable=true (bỏ qua câu ngoài phạm vi)")
 
-    retriever = Retriever()
+    retriever = Retriever(mode=args.mode, expand=args.expand)
     predictions = []
     ranks = []
     for item in items:
@@ -61,7 +69,12 @@ def main() -> int:
             }
         )
 
-    metrics: dict = {"n": len(items), "model": EMBED_MODEL}
+    metrics: dict = {
+        "n": len(items),
+        "model": EMBED_MODEL,
+        "mode": args.mode,
+        "expand": args.expand,
+    }
     for k in K_VALUES:
         hits = sum(1 for r in ranks if r is not None and r <= k)
         metrics[f"recall@{k}"] = round(hits / len(items), 4) if items else None
@@ -80,11 +93,17 @@ def main() -> int:
             "not_found": sum(1 for r in rs if r is None),
         }
 
-    out_dir = Path(f"eval/results/retrieval_{args.split}")
+    out_dir = Path(f"eval/results/retrieval_{args.split}{args.tag}")
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "config.json").write_text(
         json.dumps(
-            {"split": args.split, "k": args.k, "model": EMBED_MODEL},
+            {
+                "split": args.split,
+                "k": args.k,
+                "model": EMBED_MODEL,
+                "mode": args.mode,
+                "expand": args.expand,
+            },
             ensure_ascii=False,
             indent=2,
         ),

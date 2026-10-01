@@ -1,0 +1,9 @@
+{
+  "question": "Xe máy vượt đèn đỏ phạt bao nhiêu?",
+  "n": 15,
+  "retrieval_mode": "hybrid",
+  "query_expansion": true,
+  "counts": {
+    "answered": 15
+  }
+}

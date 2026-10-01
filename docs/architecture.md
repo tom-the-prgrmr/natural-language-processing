@@ -16,14 +16,17 @@ flowchart LR
 ```mermaid
 flowchart TD
     U[Người dùng hỏi<br/>+ lịch sử hội thoại] --> Q[Ghép lượt hỏi trước + câu hỏi hiện tại<br/>làm truy vấn retrieval]
-    Q --> R[Retriever: embed câu hỏi<br/>cosine top-k=12 trên embeddings.npz]
+    Q --> X[Mở rộng truy vấn: nối thuật ngữ luật<br/>cho cách nói đời thường, vd xe máy → xe mô tô, xe gắn máy]
+    X --> R[Retriever hybrid: cosine trên embeddings.npz<br/>+ BM25, chuẩn hoá rồi cộng 0.5/0.5, top-k=12]
     R --> CTX[Ngữ cảnh: k chunk kèm<br/>id, văn bản, hiệu lực, trạng thái]
     CTX --> P[Prompt hệ thống: chỉ trả lời theo ngữ cảnh,<br/>bắt buộc trích dẫn, từ chối khi thiếu căn cứ,<br/>chọn bản goc/sua_doi theo ngày hiệu lực]
     P --> L[gpt-5.4-mini<br/>response_format=json_object]
     L --> J[JSON: answer, citations,<br/>refused, needs_clarification]
     J --> V{Mọi id trong citations<br/>có nằm trong top-k đã truy xuất?}
     V -->|Không, có id bịa| F[Ép refused=true<br/>'tự nghĩ thêm': chống trích dẫn ảo]
-    V -->|Có| O[Trả AnswerResult cho client]
+    V -->|Có| N{Mọi số tiền trong answer có trong<br/>nội dung chunk được trích? hoặc là hiệu/tổng}
+    N -->|Không| F
+    N -->|Có| O[Trả AnswerResult cho client]
     F --> O
 ```
 

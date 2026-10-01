@@ -74,6 +74,16 @@ def test_hallucinated_citation_forces_fixed_refusal_message():
     assert r.answer == REFUSAL_MESSAGE
 
 
+def test_refused_with_money_figure_in_answer_falls_back():
+    # Lỗi đã biết (experiments/003): model đặt refused=True nhưng answer vẫn
+    # chứa một số tiền cụ thể -- không đáng tin hơn trích dẫn bịa, phải thay
+    # bằng câu dự phòng thay vì hiển thị mập mờ cho người dùng.
+    msg = "Phạt tiền từ 6.000.000 đồng đến 8.000.000 đồng theo quy định."
+    r = _run({"answer": msg, "citations": [], "refused": True})
+    assert r.refused
+    assert r.answer == REFUSAL_MESSAGE
+
+
 def test_normal_answer_is_kept():
     r = _run(
         {"answer": "Phạt 6-8 triệu", "citations": ["168_D7_K8_b"], "refused": False}
@@ -112,3 +122,65 @@ def test_answer_returns_citation_labels():
         {"answer": "Phạt 6-8 triệu", "citations": ["168_D7_K8_b"], "refused": False}
     )
     assert r.citation_labels == ["Điểm b, khoản 8, Điều 7 Nghị định 168/2024/NĐ-CP"]
+
+
+def test_amount_not_in_cited_chunk_forces_refusal():
+    # Lỗi thật (experiments/006): model nói 4-6 triệu (từ trí nhớ riêng) nhưng
+    # trích một chunk có thật trong ngữ cảnh mà chỉ ghi 6-8 triệu.
+    r = _run(
+        {
+            "answer": "Phạt từ 4.000.000 đồng đến 6.000.000 đồng.",
+            "citations": ["168_D7_K8_b"],
+            "refused": False,
+        }
+    )
+    assert r.refused
+    assert r.ungrounded_amounts == ["4.000.000"]
+    assert r.answer == REFUSAL_MESSAGE
+
+
+def test_amount_grounded_in_cited_chunk_is_kept():
+    msg = "Phạt từ 6.000.000 đồng đến 8.000.000 đồng. Căn cứ: điểm b khoản 8 Điều 7."
+    r = _run({"answer": msg, "citations": ["168_D7_K8_b"], "refused": False})
+    assert not r.refused
+    assert r.ungrounded_amounts == []
+    assert r.answer == msg
+
+
+def test_amount_without_any_citation_forces_refusal():
+    r = _run({"answer": "Phạt 6.000.000 đồng.", "citations": [], "refused": False})
+    assert r.refused
+    assert r.ungrounded_amounts == ["6.000.000"]
+
+
+def test_amount_matching_is_by_token_not_substring():
+    from src.generation import ungrounded_amounts
+
+    # "8.000.000" là chuỗi con của "18.000.000" nhưng là mức phạt khác.
+    chunks = [{"text": "Phạt tiền từ 18.000.000 đồng đến 20.000.000 đồng"}]
+    assert ungrounded_amounts("Phạt 8.000.000 đồng.", chunks) == ["8.000.000"]
+    assert ungrounded_amounts("Phạt 18.000.000 đồng.", chunks) == []
+
+
+def test_derived_difference_of_grounded_amounts_is_accepted():
+    from src.generation import ungrounded_amounts
+
+    # Câu hỏi "ô tô phạt hơn xe máy bao nhiêu": 30tr - 8tr = 22tr là số suy ra
+    # hợp lệ từ hai chunk được trích, không phải số bịa.
+    chunks = [
+        {"text": "Phạt tiền từ 30.000.000 đồng đến 40.000.000 đồng"},
+        {"text": "Phạt tiền từ 8.000.000 đồng đến 10.000.000 đồng"},
+    ]
+    assert ungrounded_amounts("Ô tô cao hơn từ 22.000.000 đồng.", chunks) == []
+    assert ungrounded_amounts("Ô tô cao hơn 25.000.000 đồng.", chunks) == ["25.000.000"]
+
+
+def test_bracketed_citation_id_is_normalized():
+    # Lỗi thật (experiments/007, q21): model chép cả ngoặc vuông của định dạng
+    # ngữ cảnh "[id] ..." vào citations, id đúng bị coi là bịa.
+    r = _run(
+        {"answer": "Phạt 6-8 triệu", "citations": [" [168_D7_K8_b] "], "refused": False}
+    )
+    assert not r.refused
+    assert r.citations == ["168_D7_K8_b"]
+    assert r.hallucinated_citations == []

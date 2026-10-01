@@ -93,9 +93,10 @@
 
   <section class="slide">
     <div class="kicker">3 · Method</div>
-    <h2>Dense retrieval + LLM ép trích dẫn, JSON output</h2>
+    <h2>Hybrid retrieval + mở rộng truy vấn + LLM ép trích dẫn</h2>
     <ul class="points">
-      <li><code>text-embedding-3-small</code> + cosine (numpy) → top-k=12 chunk.</li>
+      <li><code>text-embedding-3-small</code> + cosine, kết hợp BM25 (hybrid) → top-k=12 chunk.</li>
+      <li>Mở rộng truy vấn văn nói → thuật ngữ luật trước khi tìm ("xe máy" → "xe mô tô, xe gắn máy", "vượt đèn đỏ" → "không chấp hành hiệu lệnh của đèn tín hiệu giao thông"...).</li>
       <li><code>gpt-5.4-mini</code>, <code>response_format=json_object</code>: answer, citations, refused, needs_clarification.</li>
       <li>Chọn bản gốc ND168 hay bản sửa ND238 theo <code>effective_date</code> so với ngày hỏi.</li>
       <li>Hội thoại nhiều lượt: ghép các lượt hỏi trước làm truy vấn retrieval, không tách bước rewrite riêng.</li>
@@ -105,38 +106,39 @@
 
   <section class="slide">
     <div class="kicker">4 · Evaluation — Retrieval</div>
-    <h2>Recall@5 ~0.23–0.31 — còn yếu</h2>
+    <h2>Dense yếu → hybrid BM25+cosine → + mở rộng truy vấn</h2>
     <table>
-      <tr><th>Split</th><th>Recall@1</th><th>Recall@3</th><th>Recall@5</th><th>MRR</th></tr>
-      <tr><td>dev (n=13)</td><td>0.0769</td><td>0.1538</td><td>0.3077</td><td>0.1682</td></tr>
-      <tr><td>test (n=22)</td><td>0.0909</td><td>0.2273</td><td>0.2273</td><td>0.1591</td></tr>
+      <tr><th>Split</th><th>Mode</th><th>Recall@1</th><th>Recall@3</th><th>Recall@5</th><th>MRR</th></tr>
+      <tr><td>test (n=22)</td><td>dense</td><td>0.0909</td><td>0.2273</td><td>0.2273</td><td>0.1591</td></tr>
+      <tr><td>test (n=22)</td><td>hybrid</td><td>0.2727</td><td>0.5000</td><td>0.7273</td><td>0.4289</td></tr>
+      <tr><td>test (n=22)</td><td><b>+ mở rộng</b></td><td><b>0.4545</b></td><td><b>0.7273</b></td><td><b>0.7727</b></td><td><b>0.6134</b></td></tr>
     </table>
-    <p class="lead" style="margin-top:1.2rem;">Nguyên nhân: câu hỏi nồng độ cồn liên tục bị truy xuất nhầm sang Điều 21 (giấy tờ xe) thay vì Điều 6/7 — văn bản luật ngắn, nhiều cụm từ hành chính lặp lại làm embedding khó phân giải theo chủ đề.</p>
+    <p class="lead" style="margin-top:1.2rem;">Nguyên nhân: 73% câu test gold chunk không lọt top-12 — Điều 6/7 (mức phạt) bị lấn át bởi Điều 20/21/32 (loại xe khác) có tiêu đề hành chính gần giống hệt nhau. BM25 bắt đúng từ khoá đặc trưng mà dense "pha loãng" mất. Lỗi còn lại chủ yếu là lệch từ vựng văn nói ↔ văn bản luật → sửa bằng mở rộng truy vấn.</p>
   </section>
 
   <section class="slide">
-    <div class="kicker">4 · Evaluation — Sinh câu trả lời (test, k=12, prompt hiện tại)</div>
+    <div class="kicker">4 · Evaluation — Sinh câu trả lời (test, k=12, cấu hình chốt)</div>
     <h2>Phân tích lỗi: 2 ví dụ thật</h2>
     <div class="stat-row">
-      <div><div class="big-stat">0.6364</div><div class="stat-label">correct_numbers_rate</div></div>
-      <div><div class="big-stat">0.2727</div><div class="stat-label">citation_ok_rate</div></div>
-      <div><div class="big-stat">0.5455</div><div class="stat-label">refusal_ok (answerable)</div></div>
+      <div><div class="big-stat">0.7727</div><div class="stat-label">correct_numbers_rate</div></div>
+      <div><div class="big-stat">0.9091</div><div class="stat-label">trích dẫn đúng khoản (strict: 0.6364)</div></div>
+      <div><div class="big-stat">0.9545</div><div class="stat-label">refusal_ok (answerable)</div></div>
     </div>
     <div class="grid2" style="margin-top:1.4rem;">
       <div class="card">
-        <h3>"lạng lách xe hơi lần 2 (tái phạm)"</h3>
-        <p style="margin:0;">Gold: tịch thu xe (khoản áp dụng khi tái phạm). Retrieval không đưa chunk "tái phạm" vào top-12 → model hỏi lại / từ chối thay vì đoán.</p>
+        <h3>"Xe máy vượt đèn đỏ phạt bao nhiêu?" <span class="tag ok">đã sửa</span></h3>
+        <p style="margin:0;">Chính câu ví dụ trong README. Hybrid: 6/15 lần trả lời <b>sai mà vẫn có căn cứ</b> — áp mức xe đạp (Điều 9) cho xe máy. Sau mở rộng truy vấn: <b>15/15 đúng</b>, điều khoản đúng xếp hạng 1 cả 15 lần.</p>
       </div>
       <div class="card">
-        <h3>"chở con nít ghế trước, không ghế an toàn"</h3>
-        <p style="margin:0;">Gold: khoản 1a Điều 6 (ND238 <b>bổ sung</b>, hiệu lực 15/08/2026). Model trích nhầm khoản cũ ND168 gốc — lỗi "chưa cập nhật quy định mới".</p>
+        <h3>"chở con nít ghế trước, không ghế an toàn" <span class="tag warn">đỡ hơn, chưa hết</span></h3>
+        <p style="margin:0;">Dense: trích nhầm hẳn sang ND168 gốc. Hybrid: tìm đúng Điều 2 ND238 nhưng lệch một mục con. "Con nít" cố ý không đưa vào bảng mở rộng (chỉ biết qua câu test) → vẫn trượt.</p>
       </div>
     </div>
   </section>
 
   <section class="slide">
     <div class="kicker">5 · Cải tiến — so sánh trước/sau</div>
-    <h2>3 thí nghiệm thật: 1 thất bại, 2 giữ lại</h2>
+    <h2>7 thí nghiệm, đổi một biến mỗi lần — kể cả kết quả âm tính</h2>
     <div class="grid2">
       <div class="card">
         <h3>001 · Rút gọn text embed <span class="tag bad">thất bại</span></h3>
@@ -155,6 +157,35 @@
   </section>
 
   <section class="slide">
+    <div class="kicker">5 · Cải tiến — thí nghiệm có tác động lớn nhất</div>
+    <h2>004 · Retrieval hybrid BM25+cosine <span class="tag ok">thành công lớn</span></h2>
+    <p class="lead">Không chỉ tăng Recall — cùng prompt, chỉ đổi retrieval dense→hybrid, cả bước sinh câu trả lời cũng tốt lên rõ rệt trên <b>cả dev lẫn test</b>, không tốn thêm API, <b>latency còn nhanh hơn</b>.</p>
+    <table style="margin-top:1rem;">
+      <tr><th>Metric (test)</th><th>dense</th><th>hybrid</th></tr>
+      <tr><td>correct_numbers</td><td>0.5000</td><td><b>0.7273</b></td></tr>
+      <tr><td>citation_ok</td><td>0.2727</td><td><b>0.6818</b></td></tr>
+      <tr><td>refusal_ok (answerable)</td><td>0.5455</td><td><b>0.9545</b></td></tr>
+      <tr><td>latency p50</td><td>1718ms</td><td><b>1418ms</b></td></tr>
+    </table>
+    <p class="lead" style="margin-top:1rem; font-style:italic;">Ban đầu chủ định cắt hybrid khỏi phạm vi do thiếu thời gian — quay lại giữa chừng khi xác định được nguyên nhân cụ thể (không phải chỉ đoán) và thấy vẫn còn thời gian làm.</p>
+  </section>
+
+  <section class="slide">
+    <div class="kicker">5 · Cải tiến — 006 · 007</div>
+    <h2>Câu ví dụ README lộ ra lỗi "sai mà có căn cứ"</h2>
+    <table>
+      <tr><th>"Xe máy vượt đèn đỏ" × 15 lần</th><th>trước</th><th>sau 007</th></tr>
+      <tr><td>Hiển thị, <b>đúng</b> (4–6 triệu)</td><td>0</td><td><b>15</b></td></tr>
+      <tr><td>Hiển thị, <b>sai</b> (mức xe đạp 150–250 nghìn)</td><td>6</td><td><b>0</b></td></tr>
+      <tr><td>Bị chặn / từ chối</td><td>9</td><td>0</td></tr>
+    </table>
+    <ul class="points" style="margin-top:1rem;">
+      <li><b>006</b> — kiểm tra trích dẫn mức nội dung (số tiền phải có trong chunk được trích): chặn thêm 1/15, 0 dương tính giả; làm lộ một lỗi dữ liệu có từ đầu ("40.000.<code>&lt;span&gt;</code>000"). Nhưng 6 lần sai vẫn lọt → gốc lỗi ở retrieval.</li>
+      <li><b>007</b> — mở rộng truy vấn văn nói (5 ánh xạ, thiết kế từ dev): test MRR 0.43 → <b>0.61</b>, correct_numbers 0.73 → <b>0.77</b>, không thêm độ trễ.</li>
+    </ul>
+  </section>
+
+  <section class="slide">
     <div class="kicker">6 · Phần tự nghĩ thêm</div>
     <h2>Tự động phát hiện trích dẫn bịa (citation hallucination check)</h2>
     <ul class="points">
@@ -162,6 +193,8 @@
       <li>Sau khi nhận JSON, so từng id trong <code>citations</code> với <code>retrieved_ids</code> thật — lệch thì tự động ép <code>refused=True</code>.</li>
       <li>Nằm trong logic sản phẩm (<code>src/generation.py</code>), không chỉ ở tầng đo eval.</li>
       <li>Chạy lại test sau khi thêm: refusal_ok tăng 0.5909 → 0.6364 — bắt được các câu "trông ổn" nhưng trích dẫn sai.</li>
+      <li><b>Mức 2 (006):</b> mọi số tiền trong câu trả lời phải có trong chunk được trích — bắt kiểu "trả lời bằng trí nhớ rồi gắn id có thật nhưng không liên quan".</li>
+      <li><b>Bài học:</b> cả hai mức chỉ kiểm câu trả lời khớp ngữ cảnh, không kiểm ngữ cảnh đúng câu hỏi — retrieval sai thì câu sai vẫn "có căn cứ".</li>
     </ul>
   </section>
 
@@ -188,7 +221,8 @@
     <div class="kicker">Giới hạn đã biết</div>
     <h2>Tự nhận, không che giấu</h2>
     <ul class="points">
-      <li>Retrieval dense đơn thuần chưa đủ — hướng tiếp theo: BM25/hybrid, reranker.</li>
+      <li>Retrieval đã đỡ nhiều (Recall@5 test 0.23 → 0.77) nhưng bảng mở rộng truy vấn chỉ 5 mục viết tay — cách nói khác vẫn trượt; hướng tiếp: LLM viết lại câu hỏi, rerank.</li>
+      <li>Kiểm tra trích dẫn không bắt được ngữ cảnh sai; model hay trích cả khoản thay vì đúng điểm (căn cứ đúng nhưng kém chi tiết).</li>
       <li>40 câu eval phần lớn do LLM soạn, tra số liệu thật nhưng <b>chưa được duyệt tay toàn bộ</b>.</li>
       <li>Không cố định seed/temperature → có nhiễu nhỏ giữa các lần chạy.</li>
       <li>Hội thoại nhiều lượt có trong code/demo, chưa có bộ eval tự động riêng.</li>

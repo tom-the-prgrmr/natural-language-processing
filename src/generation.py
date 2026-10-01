@@ -7,6 +7,7 @@ khoá ngữ cảnh — ví dụ "xe máy" nhắc ở lượt 1 — vào lượt 
 """
 
 import json
+import re
 import time
 import unicodedata
 from dataclasses import dataclass, field
@@ -101,6 +102,17 @@ REFUSAL_MESSAGE = (
 # chỗ "Bạn có thể hỏi, ví dụ: ...". Sửa đúng từ đã biết thay vì bỏ cả câu.
 KNOWN_FOREIGN_WORDS = {"օրինակ": "ví dụ"}
 
+# Phát hiện cờ refused=True nhưng answer vẫn chứa một số tiền cụ thể (model tự
+# mâu thuẫn -- xem experiments/003 "Lỗi còn thấy"): nếu vậy, answer đó trông
+# như một câu trả lời thật nhưng lại bị gắn nhãn từ chối, không đáng tin hơn gì
+# một trích dẫn bịa, nên cũng thay bằng câu dự phòng thay vì hiển thị mập mờ.
+MONEY_RE = re.compile(r"\d{1,3}(?:\.\d{3})+\s*đồng")
+
+# Số tiền dạng token đầy đủ ("18.000.000"), dùng để đối chiếu câu trả lời với
+# nội dung chunk được trích. So theo token chứ không so chuỗi con: "8.000.000"
+# là chuỗi con của "18.000.000" nhưng là một mức phạt khác.
+AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})+")
+
 
 @dataclass
 class Turn:
@@ -117,6 +129,7 @@ class AnswerResult:
     clarify_question: str | None
     retrieved_ids: list[str] = field(default_factory=list)
     hallucinated_citations: list[str] = field(default_factory=list)
+    ungrounded_amounts: list[str] = field(default_factory=list)
     citation_labels: list[str] = field(default_factory=list)
     retrieval_ms: float = 0.0
     generation_ms: float = 0.0
@@ -170,6 +183,30 @@ def _is_usable_text(text: str) -> bool:
         and bool(letters)
         and all(unicodedata.name(ch, "").startswith("LATIN") for ch in letters)
     )
+
+
+def _amount_value(token: str) -> int:
+    return int(token.replace(".", ""))
+
+
+def ungrounded_amounts(text: str, cited_chunks: list[dict]) -> list[str]:
+    """Số tiền nêu trong câu trả lời nhưng không có trong nội dung chunk nào
+    được trích dẫn -- tức model lấy số từ chỗ khác (thường là trí nhớ riêng)
+    rồi gắn một trích dẫn có thật nhưng không chứa số đó.
+
+    Chấp nhận số suy ra bằng hiệu/tổng của hai số có căn cứ (câu hỏi kiểu "ô
+    tô phạt hơn xe máy bao nhiêu": 30.000.000 - 8.000.000 = 22.000.000)."""
+    grounded = {
+        _amount_value(a) for c in cited_chunks for a in AMOUNT_RE.findall(c["text"])
+    }
+    derived = {abs(x - y) for x in grounded for y in grounded} | {
+        x + y for x in grounded for y in grounded
+    }
+    return [
+        a
+        for a in dict.fromkeys(AMOUNT_RE.findall(text))
+        if _amount_value(a) not in grounded and _amount_value(a) not in derived
+    ]
 
 
 def _retrieval_query(history: list[Turn], question: str) -> str:
@@ -238,7 +275,11 @@ def answer(
 
     retrieved_ids = [c["id"] for c in chunks]
     by_id = {c["id"]: c for c in chunks}
-    citations = data.get("citations", []) or []
+    # Ngữ cảnh ghi id dạng "[168_D6_K11_a] ..." nên model đôi khi chép luôn
+    # ngoặc vuông vào citations -- không chuẩn hoá thì id đúng bị coi là bịa.
+    citations = [
+        str(c).strip().strip("[]").strip() for c in data.get("citations") or []
+    ]
     refused = bool(data.get("refused", False))
 
     # "Tự nghĩ thêm": kiểm tra trích dẫn tự động -- id model trích dẫn phải
@@ -252,7 +293,22 @@ def answer(
     text = str(data.get("answer") or "").strip()
     for foreign, vi in KNOWN_FOREIGN_WORDS.items():
         text = text.replace(foreign, vi)
-    if refused and (hallucinated or not _is_usable_text(text)):
+
+    # Mức thứ hai của kiểm tra trích dẫn: id hợp lệ chưa đủ, mọi số tiền trong
+    # câu trả lời còn phải có trong nội dung các chunk được trích. Bắt trường
+    # hợp model trả lời bằng trí nhớ riêng rồi gắn một id có trong ngữ cảnh
+    # nhưng không liên quan (xem experiments/006).
+    ungrounded: list[str] = []
+    if not refused:
+        ungrounded = ungrounded_amounts(
+            text, [by_id[c] for c in citations if c in by_id]
+        )
+        if ungrounded:
+            refused = True
+
+    if refused and (
+        hallucinated or ungrounded or not _is_usable_text(text) or MONEY_RE.search(text)
+    ):
         text = REFUSAL_MESSAGE
 
     return AnswerResult(
@@ -263,6 +319,7 @@ def answer(
         clarify_question=data.get("clarify_question"),
         retrieved_ids=retrieved_ids,
         hallucinated_citations=hallucinated,
+        ungrounded_amounts=ungrounded,
         citation_labels=[citation_label(by_id[c]) for c in citations if c in by_id],
         retrieval_ms=retrieval_ms,
         generation_ms=generation_ms,

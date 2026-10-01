@@ -23,13 +23,16 @@ data/processed/  văn bản đã làm sạch (clean/) + chunk theo điều/kho�
 data/eval/       tập đánh giá dev.jsonl (16 câu) / test.jsonl (24 câu, đóng băng)
 src/ingest/      clean.py (làm sạch HTML->text), chunk.py (chunk theo điều/khoản/điểm),
                  ocr_pdf.py (OCR bản scan ND238 bằng API vision OpenAI)
-src/             retrieval.py (embedding + cosine), generation.py (prompt + sinh câu trả lời),
-                 app.py (FastAPI)
+src/             retrieval.py (hybrid: embedding + cosine kết hợp BM25, mở rộng truy vấn
+                 văn nói -> thuật ngữ luật), generation.py (prompt + sinh câu trả lời +
+                 kiểm tra trích dẫn 2 mức), app.py (FastAPI)
 web/             demo chat tối giản (index.html, gọi /chat)
 eval/            run_retrieval.py, run_generation.py, run_api_latency.py, validate_eval.py,
+                 rescore_generation.py, run_repeat.py (chạy lặp 1 câu N lần),
                  results/ (số liệu các lần chạy thật)
 experiments/     log thí nghiệm (một biến mỗi lần, có cả kết quả âm tính)
-tests/           test_chunk.py
+tests/           test_chunk.py, test_retrieval.py, test_generation.py, test_app.py,
+                 test_eval_metrics.py
 docs/            tài liệu dự án (ý tưởng, kế hoạch, quy ước dữ liệu/eval, báo cáo, checklist)
 ```
 
@@ -82,10 +85,15 @@ tái tạo bằng lệnh trên).
 ```
 
 `--split test` chỉ nên chạy khi đã chốt cấu hình (xem quy tắc "tập test đóng
-băng" trong [`CLAUDE.md`](CLAUDE.md)) — test đã được chạy và đóng băng, kết
-quả ở `eval/results/retrieval_test/`, `eval/results/generation_test/` (prompt cũ)
-và `eval/results/generation_test_v3c_natural_style/` (prompt hiện tại, xem
-`experiments/003-...md`).
+băng" trong [`CLAUDE.md`](CLAUDE.md)) — test đã được chạy và đóng băng. Kết
+quả cấu hình hiện tại (prompt v3c + retrieval hybrid + mở rộng truy vấn):
+`eval/results/retrieval_test_007_expand/` và
+`eval/results/generation_test_007_expand/`. Các thư mục khác trong
+`eval/results/` là kết quả các cấu hình cũ, giữ lại để đối chiếu (xem
+`experiments/`).
+
+Mặc định `--mode hybrid` và có mở rộng truy vấn; thêm `--mode dense` hoặc
+`--no-expand` để chạy lại các baseline cũ so sánh.
 
 ### 4. Chạy API + demo web
 
@@ -118,11 +126,21 @@ curl -X POST http://127.0.0.1:8000/chat \
 
 ## Giới hạn đã biết
 
-- **Retrieval còn yếu** (Recall@5 ~0.23–0.31 trên dev/test): corpus luật tiếng
-  Việt ngắn, nhiều thuật ngữ hành chính lặp lại khiến embedding khó phân biệt
-  ở cấp điểm/khoản. Đã thử 2 hướng rút gọn text embed, cả hai đều tệ hơn
-  baseline (xem `experiments/001-...md`). Bù lại bằng cách tăng k ở bước sinh
-  câu trả lời (`experiments/002-...md`).
+- **Retrieval đã cải thiện nhiều nhưng chưa hoàn hảo**: dense đơn thuần ban
+  đầu chỉ đạt Recall@5 0.23 (test); hybrid cosine + BM25 nâng lên 0.73
+  (`experiments/004-...md`); mở rộng truy vấn văn nói nâng MRR 0.43 -> 0.61
+  (`experiments/007-...md`). Bảng mở rộng chỉ có 5 mục viết tay (xe máy, xe
+  hơi, vượt đèn đỏ, rượu bia, bằng lái) — cách nói đời thường khác chưa có
+  trong bảng vẫn có thể trượt (vd "con nít" thay vì "trẻ em").
+- **Bộ kiểm tra trích dẫn không bắt được ngữ cảnh sai**: hệ thống chặn trích
+  dẫn bịa id và số tiền không có trong chunk được trích, nhưng nếu retrieval
+  đưa nhầm điều khoản thì câu trả lời sai vẫn "có căn cứ". Trước bước mở rộng
+  truy vấn, chính câu mẫu ở mục 4 trả lời sai 6/15 lần theo đúng kiểu này
+  (áp mức phạt xe đạp cho xe máy); sau đó đúng 15/15 lần
+  (`experiments/006-...md`, `007-...md`).
+- **Trích dẫn đôi khi kém chi tiết**: model hay trích cả khoản thay vì đúng
+  điểm (vd "Khoản 9, Điều 6" thay vì "Điểm b, khoản 9, Điều 6"); căn cứ vẫn
+  đúng nhưng người dùng phải tự tìm điểm trong khoản.
 - **Tập đánh giá 40 câu** phần lớn do LLM soạn nháp, tra trực tiếp
   `chunks.jsonl` để lấy số liệu, **chưa được người dùng duyệt tay toàn bộ**
   (ghi rõ trong trường `verified_by` của từng câu) — cắt phạm vi do thời gian,
@@ -131,9 +149,20 @@ curl -X POST http://127.0.0.1:8000/chat \
   theo `effective_date` ở tầng retrieval + prompt tại thời điểm trả lời, không
   dựng văn bản hợp nhất riêng.
 - **Không cố định seed/temperature** cho lời gọi LLM sinh câu trả lời, nên có
-  nhiễu nhỏ giữa các lần chạy cùng cấu hình.
-- README này đã tự chạy thử từng lệnh riêng lẻ trên máy hiện tại; **chưa thử
-  trọn vẹn từ venv trống trên một máy sạch hoàn toàn khác**.
+  nhiễu nhỏ giữa các lần chạy cùng cấu hình. **API embedding cũng không tất
+  định hoàn toàn**: embed lại cùng corpus cho vector lệch nhẹ ở ~40% chunk
+  (lệch tối đa ~0.01), đủ để MRR dao động ~±0.003 giữa hai lần build index;
+  Recall@k không đổi.
+- **Đã tự chạy lại README từ đầu trên một bản sao sạch** (làm trước các thay
+  đổi ở `experiments/006`–`007`; các lệnh không đổi, chỉ đổi code bên trong):
+  chỉ gồm đúng các
+  file git sẽ đưa lên repo (không `.venv`, không cache `embeddings.npz`),
+  venv mới tinh, cài lại từ `requirements-dev.txt`, rồi chạy lần lượt mọi
+  lệnh ở trên. Tất cả chạy được: `chunks.jsonl` sinh lại **giống hệt từng
+  byte**, build index từ đầu ~17 giây, số liệu eval dev khớp kết quả gốc,
+  API/demo/latency/ruff/pytest đều đạt. Chưa kiểm: một máy/hệ điều hành
+  khác hẳn (bản sao chạy trên cùng máy Windows, cùng Python 3.11.9, dùng lại
+  `.env` sẵn có thay vì tạo mới từ `.env.example`).
 
 ## Không được làm (xem đầy đủ ở `CLAUDE.md`)
 
