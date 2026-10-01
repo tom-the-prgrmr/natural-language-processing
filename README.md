@@ -1,5 +1,11 @@
 # Chatbot tra cứu mức phạt giao thông đường bộ Việt Nam (RAG)
 
+> [!IMPORTANT]
+> ### 🚀 Dùng thử ngay: **[natural-language-processing-2yg6.onrender.com](https://natural-language-processing-2yg6.onrender.com)**
+>
+> Bản deploy trên Render (gói miễn phí): server ngủ sau ~15 phút không có ai
+> truy cập, lần mở đầu tiên có thể mất 30–60 giây để khởi động.
+
 Mini project cuối module NLP (AI Engineer K08). Hỏi đáp về mức phạt vi phạm
 giao thông đường bộ, dựa trên Luật Trật tự an toàn giao thông đường bộ
 36/2024/QH15, Nghị định 168/2024/NĐ-CP và Nghị định 238/2026/NĐ-CP (sửa đổi
