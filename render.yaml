@@ -2,7 +2,7 @@
 # Render sẽ hỏi giá trị OPENAI_API_KEY (sync: false = nhập tay, không lưu trong repo).
 services:
   - type: web
-    name: tra-cuu-muc-phat-giao-thong
+    name: natural-language-processing
     runtime: python
     plan: free
     region: singapore
