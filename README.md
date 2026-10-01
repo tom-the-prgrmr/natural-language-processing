@@ -116,7 +116,27 @@ curl -X POST http://127.0.0.1:8000/chat \
 .venv/Scripts/python eval/run_api_latency.py --base-url http://127.0.0.1:8000
 ```
 
-### 5. Lint, format, test
+### 5. Deploy lên Render (tuỳ chọn)
+
+Repo có sẵn `render.yaml`. Trên [render.com](https://render.com): **New → Blueprint**,
+chọn repo này, nhập `OPENAI_API_KEY` khi được hỏi. Render tự cài phụ thuộc,
+dựng sẵn cache embedding lúc build, rồi chạy
+`uvicorn src.app:app --host 0.0.0.0 --port $PORT`; mỗi lần push lên `main` sẽ
+tự deploy lại.
+
+- **Gói miễn phí tự ngủ sau ~15 phút không có ai dùng**; lần truy cập tiếp
+  theo phải chờ server khởi động lại (thường dưới 1 phút). Nếu đang mở trang
+  mà câu hỏi chờ quá 8 giây, trang báo "server có thể đang khởi động lại", và
+  sau khi có câu trả lời thì xác nhận bằng `uptime_s` của `/health`. Lần mở
+  link đầu tiên khi server đang ngủ thì trình duyệt chỉ quay chờ — trang chưa
+  tải được nên không tự hiện thông báo được.
+- **Giới hạn request** để link công khai không đốt hết tiền API:
+  `RATE_LIMIT_PER_MINUTE` (mặc định trong `render.yaml`: 10/phút mỗi IP) và
+  `DAILY_REQUEST_LIMIT` (300/ngày toàn hệ thống). Chạy local không đặt biến
+  này thì không giới hạn. Nên đặt thêm giới hạn chi tiêu trong trang quản trị
+  OpenAI.
+
+### 6. Lint, format, test
 
 ```bash
 .venv/Scripts/ruff check .

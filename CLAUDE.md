@@ -20,6 +20,7 @@ Chạy từ thư mục gốc. Luôn dùng python của venv dự án, không cà
 | Test | `.venv/Scripts/pytest` |
 | Typecheck | TODO: xác nhận (chưa chọn công cụ) |
 | Dev server (API + web demo) | `.venv/Scripts/uvicorn src.app:app --reload --port 8000`, demo tại `http://127.0.0.1:8000/` |
+| Deploy | Render Blueprint từ `render.yaml` (xem README mục 5); cần `OPENAI_API_KEY` trên Render |
 | Đo latency API thật | `.venv/Scripts/python eval/run_api_latency.py --base-url http://127.0.0.1:8000` (cần server đang chạy) |
 
 ## Stack

@@ -135,6 +135,21 @@ clearBtn.addEventListener("click", () => {
   inputEl.focus();
 });
 
+// Xác nhận (không chỉ đoán) câu vừa rồi chậm vì server mới khởi động: nếu
+// server chạy được chưa lâu hơn thời gian vừa phải chờ thì đúng là vừa dậy.
+async function explainSlowAnswer(waited) {
+  try {
+    const health = await (await fetch("/health")).json();
+    if (health.uptime_s <= waited + 15) {
+      statusEl.textContent =
+        `Câu vừa rồi chậm (${waited} giây) vì server vừa khởi động lại sau khi tạm ngủ. ` +
+        `Các câu tiếp theo sẽ nhanh như bình thường.`;
+    }
+  } catch {
+    /* không xác nhận được thì thôi, câu trả lời vẫn đã hiển thị */
+  }
+}
+
 formEl.addEventListener("submit", async (e) => {
   e.preventDefault();
   const question = inputEl.value.trim();
@@ -143,13 +158,32 @@ formEl.addEventListener("submit", async (e) => {
   inputEl.value = "";
   sendEl.disabled = true;
   statusEl.textContent = "Đang tra cứu...";
+  // Câu trả lời bình thường mất 1-3 giây. Chờ lâu hơn nhiều thường là do bản
+  // deploy miễn phí đang khởi động lại sau khi tạm ngủ vì không ai dùng.
+  const started = Date.now();
+  const slowTimer = setInterval(() => {
+    const waited = Math.round((Date.now() - started) / 1000);
+    if (waited >= 8) {
+      statusEl.textContent =
+        `Server có thể đang khởi động lại (bản demo miễn phí tự tạm dừng khi không có ai dùng), ` +
+        `thường mất dưới 1 phút. Đã đợi ${waited} giây...`;
+    }
+  }, 1000);
   try {
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, history }),
     });
-    if (!res.ok) throw new Error("HTTP " + res.status);
+    if (!res.ok) {
+      let msg = "HTTP " + res.status;
+      try {
+        msg = (await res.json()).detail || msg;
+      } catch {
+        /* giữ mã HTTP nếu body không phải JSON */
+      }
+      throw new Error(msg);
+    }
     const data = await res.json();
     let metaLine = `${data.retrieval_ms.toFixed(0)}ms truy xuất + ${data.generation_ms.toFixed(0)}ms sinh`;
     const cites = data.citation_labels.length ? data.citation_labels : data.citations;
@@ -166,9 +200,12 @@ formEl.addEventListener("submit", async (e) => {
     history.push({ role: "assistant", content: data.answer || data.clarify_question || "" });
     persist(savedLog);
     statusEl.textContent = "";
+    const waited = Math.round((Date.now() - started) / 1000);
+    if (waited >= 8) await explainSlowAnswer(waited);
   } catch (err) {
     statusEl.textContent = "Lỗi: " + err.message;
   } finally {
+    clearInterval(slowTimer);
     sendEl.disabled = false;
     inputEl.focus();
   }

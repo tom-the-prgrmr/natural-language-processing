@@ -1,0 +1,24 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> chọn repo này.
+# Render sẽ hỏi giá trị OPENAI_API_KEY (sync: false = nhập tay, không lưu trong repo).
+services:
+  - type: web
+    name: tra-cuu-muc-phat-giao-thong
+    runtime: python
+    plan: free
+    region: singapore
+    # Dựng sẵn cache embedding lúc build: bản miễn phí xoá ổ đĩa mỗi lần khởi
+    # động lại, build sẵn thì lúc server thức dậy không phải gọi lại API embed.
+    buildCommand: pip install -r requirements.txt && python -m src.retrieval
+    startCommand: uvicorn src.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: OPENAI_API_KEY
+        sync: false
+      # Link công khai -> giới hạn để không đốt hết tiền API (xem src/app.py).
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "10"
+      - key: DAILY_REQUEST_LIMIT
+        value: "300"
