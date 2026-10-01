@@ -115,17 +115,17 @@
   </section>
 
   <section class="slide">
-    <div class="kicker">4 · Evaluation — Sinh câu trả lời (test, k=12, đóng băng)</div>
+    <div class="kicker">4 · Evaluation — Sinh câu trả lời (test, k=12, prompt hiện tại)</div>
     <h2>Phân tích lỗi: 2 ví dụ thật</h2>
     <div class="stat-row">
-      <div><div class="big-stat">0.5455</div><div class="stat-label">correct_numbers_rate</div></div>
-      <div><div class="big-stat">0.2273</div><div class="stat-label">citation_ok_rate</div></div>
-      <div><div class="big-stat">0.6364</div><div class="stat-label">refusal_ok (answerable)</div></div>
+      <div><div class="big-stat">0.6364</div><div class="stat-label">correct_numbers_rate</div></div>
+      <div><div class="big-stat">0.2727</div><div class="stat-label">citation_ok_rate</div></div>
+      <div><div class="big-stat">0.5455</div><div class="stat-label">refusal_ok (answerable)</div></div>
     </div>
     <div class="grid2" style="margin-top:1.4rem;">
       <div class="card">
         <h3>"lạng lách xe hơi lần 2 (tái phạm)"</h3>
-        <p style="margin:0;">Gold: tịch thu xe (khoản áp dụng khi tái phạm). Retrieval không đưa chunk "tái phạm" vào top-12 → model hỏi lại thay vì đoán.</p>
+        <p style="margin:0;">Gold: tịch thu xe (khoản áp dụng khi tái phạm). Retrieval không đưa chunk "tái phạm" vào top-12 → model hỏi lại / từ chối thay vì đoán.</p>
       </div>
       <div class="card">
         <h3>"chở con nít ghế trước, không ghế an toàn"</h3>
@@ -136,7 +136,7 @@
 
   <section class="slide">
     <div class="kicker">5 · Cải tiến — so sánh trước/sau</div>
-    <h2>2 thí nghiệm thật: 1 thất bại, 1 thành công</h2>
+    <h2>3 thí nghiệm thật: 1 thất bại, 2 giữ lại</h2>
     <div class="grid2">
       <div class="card">
         <h3>001 · Rút gọn text embed <span class="tag bad">thất bại</span></h3>
@@ -151,6 +151,7 @@
         </table>
       </div>
     </div>
+    <p class="lead" style="margin-top:1.2rem;"><b>003 · Prompt văn phong tự nhiên</b> <span class="tag ok">giữ</span> — câu lặp "không phải tư vấn pháp lý" 8→0 (dev), câu đầu trả lời thẳng, cuối ghi "Căn cứ: điểm… khoản… Điều…". Độ đúng không giảm (dev: đúng số 0.4615→0.5385, đúng trích dẫn 0.4615→0.6154, trong nhiễu ~2/13 câu).</p>
   </section>
 
   <section class="slide">

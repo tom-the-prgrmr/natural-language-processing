@@ -39,7 +39,7 @@ Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu 
 | 2. Data | có | `docs/report.md` §2, `data/raw/SOURCES.md`, `docs/legal-data.md` | — |
 | 3. Method | có | `docs/report.md` §3, `src/retrieval.py`, `src/generation.py` | — |
 | 4. Evaluation + phân tích lỗi | có | `docs/report.md` §4, `eval/results/` | — |
-| 5. Cải tiến | có | `docs/report.md` §5, `experiments/001`, `experiments/002` | — |
+| 5. Cải tiến | có | `docs/report.md` §5, `experiments/001`, `experiments/002`, `experiments/003` | — |
 | 6. Phần tự nghĩ thêm | có | `docs/report.md` §6 (kiểm tra trích dẫn bịa) | — |
 | 7. Deployment | có | `docs/report.md` §7, `src/app.py`, `web/index.html`, `eval/results/api_latency/` | — |
 | Repo GitHub công khai | có | `gh repo view` → `PUBLIC` | — |
@@ -48,7 +48,7 @@ Với mỗi mục: kiểm tra bằng cách **đọc file thật**, đánh dấu 
 | Slide HTML | có | `docs/slides.html` | — |
 | Video 5–10 phút | **chưa** | — | quay, kèm link GitHub khi nộp trên Google Classroom |
 | Không lộ `.env`/khoá API | có | `git ls-files \| grep .env` rỗng, `.gitignore` | — |
-| Cảnh báo "tham khảo, không tư vấn pháp lý" | có | `web/index.html` header, `README.md`, prompt hệ thống | — |
+| Cảnh báo "tham khảo, không tư vấn pháp lý" | có | `web/index.html` header, `README.md` (prompt không lặp lại trong từng câu trả lời, xem `experiments/003`) | — |
 | Nguồn luật + ngày truy cập + trạng thái đối chiếu OCR | có | `data/raw/SOURCES.md`, `docs/legal-data.md` | — |
 | Test đóng băng không bị rò | có | `test.jsonl` chỉ dùng ở `eval/run_*.py --split test`, không đưa vào prompt | — |
 | Điểm yếu nói thẳng | có | `docs/report.md` mục "Giới hạn đã biết", `README.md` | — |

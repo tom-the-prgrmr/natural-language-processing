@@ -57,6 +57,7 @@ class ChatResponse(BaseModel):
     clarify_question: str | None
     retrieved_ids: list[str]
     hallucinated_citations: list[str]
+    citation_labels: list[str]
     retrieval_ms: float
     generation_ms: float
 
@@ -78,6 +79,7 @@ def chat(req: ChatRequest) -> ChatResponse:
         clarify_question=r.clarify_question,
         retrieved_ids=r.retrieved_ids,
         hallucinated_citations=r.hallucinated_citations,
+        citation_labels=r.citation_labels,
         retrieval_ms=r.retrieval_ms,
         generation_ms=r.generation_ms,
     )

@@ -5,7 +5,7 @@ Bài nộp AI Engineer K08. Đề bài: `docs/assignment.md`. Ý tưởng, ràng
 Hệ thống dự kiến (dạng chatbot, hội thoại nhiều lượt): hỏi đáp về xử phạt giao thông đường bộ Việt Nam trên Luật 36/2024/QH15, Nghị định 168/2024/NĐ-CP và Nghị định 238/2026/NĐ-CP (sửa ND168, hiệu lực 15/08/2026; một số điều khoản hiệu lực muộn hơn, xem SOURCES.md). Retrieval theo điều/khoản, LLM chỉ trả lời dựa trên ngữ cảnh truy xuất, có trích dẫn, từ chối khi ngoài phạm vi. Công cụ tham khảo, không phải tư vấn pháp lý.
 
 ## Trạng thái hiện tại
-Có pipeline đầy đủ: làm sạch + chunk (`data/processed/chunks.jsonl`), tập đánh giá 40 câu (`data/eval/`, **chưa được người dùng duyệt tay**), retrieval (`src/retrieval.py`), sinh câu trả lời có trích dẫn + tự phát hiện trích dẫn bịa (`src/generation.py`), test (`tests/`), 2 thí nghiệm ghi lại ở `experiments/`, FastAPI `/chat` + demo web tối giản (`src/app.py`, `web/index.html`), báo cáo + sơ đồ + slide (`docs/report.md`, `docs/architecture.md`, `docs/slides.html`), review theo `docs/submission-checklist.md` (bảng kết quả đã điền). **Chưa có:** video nộp bài.
+Có pipeline đầy đủ: làm sạch + chunk (`data/processed/chunks.jsonl`), tập đánh giá 40 câu (`data/eval/`, **chưa được người dùng duyệt tay**), retrieval (`src/retrieval.py`), sinh câu trả lời có trích dẫn + tự phát hiện trích dẫn bịa (`src/generation.py`), test (`tests/`), 3 thí nghiệm ghi lại ở `experiments/`, FastAPI `/chat` + demo web tối giản (`src/app.py`, `web/index.html`), báo cáo + sơ đồ + slide (`docs/report.md`, `docs/architecture.md`, `docs/slides.html`), review theo `docs/submission-checklist.md` (bảng kết quả đã điền). **Chưa có:** video nộp bài.
 
 ## Commands
 Chạy từ thư mục gốc. Luôn dùng python của venv dự án, không cài gì vào Python toàn cục.
@@ -34,8 +34,8 @@ src/ingest/      clean.py, chunk.py, ocr_pdf.py                    [đã có]
 src/             retrieval.py, generation.py, app.py (FastAPI)     [đã có]
 web/             index.html (demo chat tối giản, gọi /chat)        [đã có]
 eval/            run_retrieval.py, run_generation.py, run_api_latency.py, validate_eval.py, results/ [đã có]
-tests/           test_chunk.py                                     [đã có]
-experiments/     001, 002 (log thí nghiệm)                         [đã có]
+tests/           test_chunk.py, test_generation.py                 [đã có]
+experiments/     001, 002, 003 (log thí nghiệm)                    [đã có]
 docs/            assignment.md, 00-idea.md, plan.md, submission-checklist.md, ...
 ```
 

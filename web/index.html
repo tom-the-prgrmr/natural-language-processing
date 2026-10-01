@@ -90,7 +90,8 @@ formEl.addEventListener("submit", async (e) => {
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     let metaLine = `${data.retrieval_ms.toFixed(0)}ms truy xuất + ${data.generation_ms.toFixed(0)}ms sinh`;
-    if (data.citations.length) metaLine += ` · trích dẫn: ${data.citations.join(", ")}`;
+    const cites = data.citation_labels.length ? data.citation_labels : data.citations;
+    if (cites.length && !data.refused) metaLine += ` · căn cứ: ${cites.join("; ")}`;
     if (data.needs_clarification) metaLine += " · cần hỏi lại";
     if (data.refused) metaLine += " · từ chối trả lời";
     addMsg("assistant", data.answer || data.clarify_question || "(không có câu trả lời)", {

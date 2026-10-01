@@ -83,7 +83,9 @@ tái tạo bằng lệnh trên).
 
 `--split test` chỉ nên chạy khi đã chốt cấu hình (xem quy tắc "tập test đóng
 băng" trong [`CLAUDE.md`](CLAUDE.md)) — test đã được chạy và đóng băng, kết
-quả ở `eval/results/retrieval_test/`, `eval/results/generation_test/`.
+quả ở `eval/results/retrieval_test/`, `eval/results/generation_test/` (prompt cũ)
+và `eval/results/generation_test_v3c_natural_style/` (prompt hiện tại, xem
+`experiments/003-...md`).
 
 ### 4. Chạy API + demo web
 

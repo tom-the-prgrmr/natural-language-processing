@@ -34,6 +34,6 @@ flowchart LR
     W[web/index.html<br/>demo chat] -->|POST /chat| S[FastAPI src/app.py]
     S --> RT[Retriever<br/>giữ chung giữa các request]
     S --> GN[src/generation.py]
-    RT -.embeddings.npz.-> GN
+    RT -.->|embeddings.npz| GN
     GN -->|API| OA[(OpenAI: embedding + chat)]
 ```

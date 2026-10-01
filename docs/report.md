@@ -14,7 +14,7 @@ một phần ND168, hiệu lực từ 15/08/2026).
 
 **Cho ai dùng:** người dân/tài xế tra cứu nhanh mức phạt cho một hành vi cụ
 thể, thay vì đọc nguyên văn nghị định (ND168 dài 55 điều). Đây là công cụ
-tham khảo, không thay thế tư vấn pháp lý — hệ thống luôn nhắc rõ điều này và
+tham khảo, không thay thế tư vấn pháp lý — giao diện luôn hiển thị lưu ý này và hệ thống
 chủ động từ chối khi không đủ căn cứ.
 
 **Vì sao chọn đề tài này:** có nhu cầu thực tế (ND238 sửa đổi mức phạt từ
@@ -157,31 +157,39 @@ quy trình **từ chối trả lời** thay vì bịa — an toàn nhưng không
 chi tiết thí nghiệm đã thử để sửa (không thành công) ở mục 5 và
 `experiments/001-...md`.
 
-### Sinh câu trả lời (test, cấu hình đóng băng k=12)
+### Sinh câu trả lời (test, k=12)
 
-| Metric | Giá trị |
-|---|---|
-| correct_numbers_rate (answerable, n=22) | 0.5455 |
-| citation_ok_rate (answerable, n=22) | 0.2273 |
-| refusal_ok_rate (answerable — nên trả lời) | 0.6364 |
-| refusal_ok_rate (unanswerable, n=2 — nên từ chối) | 1.0 |
-| latency total p50 / max | 2082ms / 3385ms |
+Test được chạy với prompt cũ, sau đó chạy lại **một lần** khi đổi prompt văn
+phong (thí nghiệm `003`, chốt trên dev trước rồi mới chạy test, không chỉnh
+tiếp sau khi xem số test). Cả hai lần đều giữ lại.
 
-(`eval/results/generation_test/`.) Theo nhóm (test): `muc_phat_truc_tiep`
-0.4286, `doi_thuong` 0.0, `nhieu_dieu_kien` 0.25, `phu_thuoc_loai_xe` 0.0,
-`ngoai_pham_vi` 1.0, `bay_loi_thoi` 0.5 (tiêu chí "ok" = đúng số liệu VÀ
-đúng trích dẫn với câu answerable, hoặc từ chối đúng với câu unanswerable).
+| Metric | Prompt cũ | Prompt văn phong (hiện tại) |
+|---|---|---|
+| correct_numbers_rate (answerable, n=22) | 0.5455 | 0.6364 |
+| citation_ok_rate (answerable, n=22) | 0.2273 | 0.2727 |
+| refusal_ok_rate (answerable — nên trả lời) | 0.6364 | 0.5455 |
+| refusal_ok_rate (unanswerable, n=2 — nên từ chối) | 1.0 | 1.0 |
+| latency total p50 / max | 2082ms / 3385ms | 1718ms / 2805ms |
+
+(`eval/results/generation_test/`, `eval/results/generation_test_v3c_natural_style/`.)
+Theo nhóm (test, prompt hiện tại): `muc_phat_truc_tiep` 3/7, `doi_thuong`
+1/5, `nhieu_dieu_kien` 1/4, `phu_thuoc_loai_xe` 0/4, `ngoai_pham_vi` 2/2,
+`bay_loi_thoi` 1/2 (prompt cũ giống hệt, trừ `doi_thuong` 0/5; tiêu chí "ok"
+= đúng số liệu VÀ đúng trích dẫn với câu answerable, hoặc từ chối đúng với
+câu unanswerable). Chênh lệch giữa hai cột nhỏ hơn dao động đo được giữa hai
+lần chạy cùng một prompt trên dev (~2/13 câu, xem `experiments/003`), nên
+không coi là cải thiện độ đúng.
 
 **`citation_ok_rate` thấp hơn cả retrieval Recall@5** — hợp lý, vì
 `citation_ok` yêu cầu đúng chunk vàng nằm trong `citations` LLM thực sự dùng
 (tập con của 12 chunk truy xuất), chặt hơn việc gold chunk chỉ cần *có mặt*
 trong top-12.
 
-**Ví dụ lỗi cụ thể** (từ `eval/results/generation_test/predictions.jsonl`):
+**Ví dụ lỗi cụ thể** (từ `eval/results/generation_test/predictions.jsonl`, lặp lại ở lần chạy prompt mới):
 - *"lạng lách xe hơi lần 2 (tái phạm) bị sao không"* — gold: tịch thu xe
   (Điều 6 khoản 14, áp dụng khi tái phạm khoản 12). Retrieval không đưa
-  chunk "tái phạm → tịch thu" vào top-12; model đúng mực hỏi lại thay vì
-  đoán. Nhóm lỗi: quy định kiểu "nếu vi phạm X thì áp dụng mức ở khoản
+  chunk "tái phạm → tịch thu" vào top-12; model đúng mực hỏi lại (prompt mới:
+  từ chối) thay vì đoán. Nhóm lỗi: quy định kiểu "nếu vi phạm X thì áp dụng mức ở khoản
   khác" (tái phạm, gộp hành vi) khó với retrieval từng-khoản độc lập.
 - *"chở con nít ngồi ghế trước xe hơi mà không có ghế an toàn giờ phạt
   chưa"* — gold: phạt cảnh cáo theo khoản 1a Điều 6 (khoản **do ND238 bổ
@@ -203,7 +211,7 @@ báo cáo thay vì report số đẹp mà không giải thích.
 
 ## 5. Cải tiến (so sánh trước/sau bằng số liệu thật)
 
-Hai thí nghiệm thật, mỗi lần đổi đúng một biến, log đầy đủ ở `experiments/`:
+Ba thí nghiệm thật, mỗi lần đổi đúng một biến, log đầy đủ ở `experiments/`:
 
 **`001` — rút gọn text dùng để embed (thất bại, giữ nguyên baseline).**
 Giả thuyết: tiêu đề Điều lặp lại ở mọi chunk con làm loãng vector. Thử bỏ
@@ -228,6 +236,17 @@ Cải thiện thật trên cả 3 chỉ số, `refusal_ok` cho câu ngoài phạ
 đáng kể (p50 tổng 2077ms ở k=12 so với 2329ms ở k=8 trên dev — thực ra nhanh
 hơn, nằm trong biên độ nhiễu giữa các lần gọi LLM). Chốt k=12 làm cấu hình
 chính thức.
+
+**`003` — prompt văn phong tự nhiên (giữ).** Câu trả lời cũ chép nguyên câu
+chữ điều luật và lặp "không phải tư vấn pháp lý" (8/16 câu dev). Prompt mới:
+câu đầu trả lời thẳng, từ đời thường nhưng giữ nguyên số tiền, câu cuối
+"Căn cứ: điểm… khoản… Điều…", không lặp câu miễn trừ (giao diện đã có). Trên
+dev: câu lặp miễn trừ 8 → 0; `correct_numbers` 0.4615 → 0.5385,
+`citation_ok` 0.4615 → 0.6154, `refusal_ok` (answerable) 0.8462 → 0.6154.
+Hai chỉ số đầu tăng nhưng nằm trong dao động giữa các lần chạy (~2/13 câu)
+nên chỉ kết luận "không giảm". `refusal_ok` giảm vì 3 câu bản cũ trả lời
+**sai** (q13, q14, q28) nay chuyển thành từ chối; 5 câu bản cũ đúng hoàn
+toàn vẫn đúng.
 
 ## 6. Phần tự nghĩ thêm: tự động phát hiện trích dẫn bịa
 
@@ -259,7 +278,9 @@ riêng, tốn thêm một lượt gọi API).
 **API:** FastAPI, một endpoint `POST /chat` (`src/app.py`), nhận
 `{question, history}`, trả `{answer, citations, refused,
 needs_clarification, clarify_question, retrieved_ids,
-hallucinated_citations, retrieval_ms, generation_ms}`. `Retriever` và
+hallucinated_citations, citation_labels, retrieval_ms, generation_ms}`
+(`citation_labels`: trích dẫn dạng chữ, vd "Điểm b, khoản 8, Điều 7 Nghị định
+168/2024/NĐ-CP", để web hiển thị thay cho id chunk). `Retriever` và
 `OpenAI` client được tạo một lần lúc khởi động server và dùng chung cho mọi
 request (không embed lại corpus mỗi câu hỏi).
 

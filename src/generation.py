@@ -8,6 +8,7 @@ khoá ngữ cảnh — ví dụ "xe máy" nhắc ở lượt 1 — vào lượt 
 
 import json
 import time
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 
@@ -23,15 +24,21 @@ SYSTEM_PROMPT_TEMPLATE = """\
 Bạn là trợ lý tra cứu mức phạt vi phạm giao thông đường bộ Việt Nam, dựa trên \
 Luật Trật tự an toàn giao thông đường bộ 36/2024/QH15, Nghị định 168/2024/NĐ-CP \
 và Nghị định 238/2026/NĐ-CP (sửa đổi một số điều của ND168, hiệu lực từ \
-15/08/2026). Đây là CÔNG CỤ THAM KHẢO, KHÔNG PHẢI TƯ VẤN PHÁP LÝ — luôn nói rõ \
-điều này khi phù hợp.
+15/08/2026). Giao diện đã hiển thị sẵn lưu ý "công cụ tham khảo, không phải tư \
+vấn pháp lý", nên KHÔNG lặp lại câu này trong câu trả lời. Phần NGỮ CẢNH \
+trong tin nhắn là do hệ thống tự tra cứu, người dùng không nhìn thấy: khi cần \
+nhắc tới, gọi là "các quy định tôi tra được", KHÔNG nói "ngữ cảnh bạn cung cấp".
 
 QUY TẮC BẮT BUỘC:
 1. CHỈ trả lời dựa trên các đoạn văn bản (ngữ cảnh) được cung cấp dưới đây. \
 KHÔNG được bịa số liệu, điều khoản, hay dùng kiến thức ngoài ngữ cảnh.
 2. Nếu ngữ cảnh không đủ để trả lời chắc chắn (không có đoạn nào liên quan, \
-hoặc câu hỏi ngoài phạm vi giao thông đường bộ Việt Nam), đặt "refused": true \
-và giải thích ngắn gọn, KHÔNG đoán bừa.
+hoặc câu hỏi ngoài phạm vi giao thông đường bộ Việt Nam), đặt "refused": true, \
+KHÔNG đoán bừa, và trong "answer" viết 1-3 câu hoàn chỉnh, lịch sự: (a) nói rõ \
+lý do — câu hỏi nằm ngoài phạm vi (nêu ngắn chủ đề câu hỏi) HOẶC thuộc phạm vi \
+nhưng văn bản được cung cấp không có quy định phù hợp; (b) nhắc rằng bạn chỉ tra \
+cứu mức phạt giao thông đường bộ theo các văn bản trên; (c) gợi ý 1 ví dụ câu \
+hỏi phù hợp hoặc cách diễn đạt lại. Không để "answer" trống; "citations" là [].
 3. Nếu câu hỏi thiếu thông tin cần thiết để xác định đúng mức phạt (thường là \
 LOẠI XE: ô tô hay xe máy — vì hai loại phạt khác nhau rất nhiều), đặt \
 "needs_clarification": true và hỏi lại trong "clarify_question" thay vì đoán.
@@ -43,12 +50,56 @@ trước đó, dùng đoạn "status": "goc". Nếu câu hỏi không nói rõ t
 hiệu lực.
 5. Mọi mức phạt nêu ra phải kèm trích dẫn (id đoạn văn bản dùng) trong \
 "citations". Không trích dẫn đoạn không thực sự dùng để suy ra câu trả lời.
-6. Trả lời ngắn gọn, đúng trọng tâm, tiếng Việt.
+6. Văn phong tự nhiên, như một người am hiểu luật giải thích cho người dân, \
+HOÀN TOÀN bằng tiếng Việt (không chèn từ của ngôn ngữ khác), văn bản thuần \
+(không markdown, không gạch đầu dòng), thường 2-4 câu:
+   - Câu đầu trả lời thẳng câu hỏi (bị phạt bao nhiêu / có bị phạt không).
+   - Diễn đạt bằng từ đời thường ("xe máy", "ô tô", "vượt đèn đỏ") thay vì \
+chép nguyên câu chữ điều luật, NHƯNG giữ nguyên số tiền đúng như văn bản, \
+viết đầy đủ dạng "từ X.000.000 đồng đến Y.000.000 đồng" (được thêm cách đọc \
+gọn trong ngoặc, vd "(X–Y triệu)").
+   - Chỉ nêu hình phạt bổ sung (trừ điểm, tước giấy phép lái xe...) khi có \
+đoạn ngữ cảnh ghi RÕ con số cho đúng hành vi đó, và trích dẫn cả đoạn đó; \
+không có thì bỏ qua, KHÔNG nói chung chung kiểu "bị trừ điểm theo quy định".
+   - Câu cuối nêu căn cứ dạng "Căn cứ: điểm ... khoản ... Điều ... Nghị định \
+168/2024/NĐ-CP." (ghi rõ văn bản/bản sửa đổi được áp dụng).
+7. Lời chào, cảm ơn, hoặc hỏi bạn làm được gì: đáp lại thân thiện 1-2 câu, \
+giới thiệu ngắn mình tra cứu mức phạt giao thông đường bộ; "refused": false, \
+"citations": [].
 
 Trả lời DUY NHẤT một object JSON đúng schema:
 {"answer": "...", "citations": ["<id đoạn>", ...], "refused": bool, \
 "needs_clarification": bool, "clarify_question": "..." hoặc null}
+
+Ví dụ minh hoạ VĂN PHONG khi trả lời (X, Y, Z, ... là chỗ trống; số và điều \
+khoản thật phải lấy từ ngữ cảnh, không lấy từ ví dụ này):
+{"answer": "Xe máy [hành vi] sẽ bị phạt từ X.000.000 đồng đến Y.000.000 đồng \
+(X–Y triệu). Ngoài ra, người vi phạm còn bị trừ Z điểm giấy phép lái xe. \
+Căn cứ: điểm ... khoản ... Điều ... Nghị định 168/2024/NĐ-CP.", "citations": \
+["<id đoạn>"], "refused": false, "needs_clarification": false, \
+"clarify_question": null}
+
+Ví dụ khi từ chối (câu hỏi "Đi máy bay mang bật lửa có bị phạt không?"):
+{"answer": "Câu hỏi về quy định mang đồ lên máy bay nằm ngoài phạm vi của tôi. \
+Tôi chỉ tra cứu mức phạt vi phạm giao thông đường bộ theo Luật 36/2024/QH15, \
+ND 168/2024 và ND 238/2026. Bạn có thể hỏi, ví dụ: \\"Xe máy không đội mũ bảo \
+hiểm bị phạt bao nhiêu?\\"", "citations": [], "refused": true, \
+"needs_clarification": false, "clarify_question": null}
 """
+
+
+# Câu từ chối dự phòng: chỉ dùng khi không dùng được lời từ chối model tự viết
+# (rỗng/rác như "{", JSON lỗi) hoặc khi bị ép từ chối do trích dẫn bịa (text
+# model viết lúc đó không đáng tin). Text gốc của model vẫn giữ trong raw.
+REFUSAL_MESSAGE = (
+    "Xin lỗi, tôi không có kiến thức cho câu hỏi này. Tôi chỉ tra cứu được mức "
+    "phạt vi phạm giao thông đường bộ theo Luật 36/2024/QH15, Nghị định "
+    "168/2024/NĐ-CP và Nghị định 238/2026/NĐ-CP."
+)
+
+# Lỗi lặp lại của gpt-5.4-mini: viết từ tiếng Armenia "օրինակ" (= "ví dụ") ở
+# chỗ "Bạn có thể hỏi, ví dụ: ...". Sửa đúng từ đã biết thay vì bỏ cả câu.
+KNOWN_FOREIGN_WORDS = {"օրինակ": "ví dụ"}
 
 
 @dataclass
@@ -66,6 +117,7 @@ class AnswerResult:
     clarify_question: str | None
     retrieved_ids: list[str] = field(default_factory=list)
     hallucinated_citations: list[str] = field(default_factory=list)
+    citation_labels: list[str] = field(default_factory=list)
     retrieval_ms: float = 0.0
     generation_ms: float = 0.0
     raw: dict = field(default_factory=dict)
@@ -81,6 +133,43 @@ def _system_prompt(as_of: date | None = None) -> str:
     một ngày cụ thể — ngày hiệu lực luật thay đổi theo thời gian thật."""
     today = (as_of or datetime.now(UTC).date()).isoformat()
     return SYSTEM_PROMPT_TEMPLATE.replace("{today}", today)
+
+
+LAW_SHORT_NAMES = {
+    "L36": "Luật 36/2024/QH15",
+    "168": "Nghị định 168/2024/NĐ-CP",
+    "238": "Nghị định 238/2026/NĐ-CP",
+}
+
+
+def citation_label(chunk: dict) -> str:
+    """ID chunk -> nhãn dễ đọc, vd 168_D7_K8_b -> "Điểm b, khoản 8, Điều 7
+    Nghị định 168/2024/NĐ-CP". Khoản "0" là cả điều (không có khoản)."""
+    parts = []
+    if chunk.get("diem"):
+        parts.append(f"điểm {chunk['diem']}")
+    if chunk.get("khoan") not in (None, "0"):
+        parts.append(f"khoản {chunk['khoan']}")
+    parts.append(f"Điều {chunk['dieu']}")
+    label = ", ".join(parts)
+    label = label[0].upper() + label[1:]
+    law = LAW_SHORT_NAMES.get(chunk["law"], chunk["name"])
+    label = f"{label} {law}"
+    if chunk.get("amends_dieu"):
+        label += f" (sửa đổi Điều {chunk['amends_dieu']} NĐ 168)"
+    return label
+
+
+def _is_usable_text(text: str) -> bool:
+    """Lọc lời từ chối rác: quá ngắn/không có chữ (vd. "{", "refused"), hoặc lẫn
+    chữ ngoài bảng Latin (model đôi khi chèn từ tiếng Armenia "օրինակ"; chữ
+    tiếng Việt có dấu đều thuộc Latin)."""
+    letters = [ch for ch in text if ch.isalpha()]
+    return (
+        len(text) >= 15
+        and bool(letters)
+        and all(unicodedata.name(ch, "").startswith("LATIN") for ch in letters)
+    )
 
 
 def _retrieval_query(history: list[Turn], question: str) -> str:
@@ -148,6 +237,7 @@ def answer(
         }
 
     retrieved_ids = [c["id"] for c in chunks]
+    by_id = {c["id"]: c for c in chunks}
     citations = data.get("citations", []) or []
     refused = bool(data.get("refused", False))
 
@@ -159,14 +249,21 @@ def answer(
     if hallucinated:
         refused = True
 
+    text = str(data.get("answer") or "").strip()
+    for foreign, vi in KNOWN_FOREIGN_WORDS.items():
+        text = text.replace(foreign, vi)
+    if refused and (hallucinated or not _is_usable_text(text)):
+        text = REFUSAL_MESSAGE
+
     return AnswerResult(
-        answer=data.get("answer", ""),
+        answer=text,
         citations=citations,
         refused=refused,
         needs_clarification=bool(data.get("needs_clarification", False)),
         clarify_question=data.get("clarify_question"),
         retrieved_ids=retrieved_ids,
         hallucinated_citations=hallucinated,
+        citation_labels=[citation_label(by_id[c]) for c in citations if c in by_id],
         retrieval_ms=retrieval_ms,
         generation_ms=generation_ms,
         raw=data,
