@@ -11,7 +11,9 @@ ngoài phạm vi.
 Ý tưởng và ràng buộc đầy đủ: [`docs/00-idea.md`](docs/00-idea.md). Kế hoạch
 thực hiện và các việc đã cắt khỏi phạm vi ban đầu:
 [`docs/plan.md`](docs/plan.md). Báo cáo (vấn đề, dữ liệu, phương pháp, đánh
-giá, phân tích lỗi): [`docs/report.md`](docs/report.md).
+giá, phân tích lỗi): [`docs/report.md`](docs/report.md). Sơ đồ kiến trúc và
+luồng xử lý end to end: [`docs/architecture.md`](docs/architecture.md). Slide
+tóm tắt (mở bằng trình duyệt): [`docs/slides.html`](docs/slides.html).
 
 ## Cấu trúc thư mục
 

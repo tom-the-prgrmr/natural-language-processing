@@ -8,6 +8,7 @@ lúc khởi động) thay vì tạo mới mỗi câu hỏi -- tránh gọi lại
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -20,6 +21,16 @@ WEB_DIR = Path("web")
 
 app = FastAPI(title="Chatbot tra cứu mức phạt giao thông")
 _state: dict = {}
+
+# Demo cục bộ, không có cookie/credential -- cho phép mọi origin để trang
+# web/index.html vẫn gọi được /chat kể cả khi mở trực tiếp (file://) hoặc
+# phục vụ từ một static server khác (port khác với uvicorn).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
